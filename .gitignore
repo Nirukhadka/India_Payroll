@@ -25,3 +25,10 @@ reports_dom.html
 *.zip
 *.bundle
 graphify-out/cache/
+
+# Internal reports
+DAILY_REPORT.txt
+MIDDAY_REPORT.txt
+FULL_DAY_REPORT.txt
+daily_report_full_time.txt
+
