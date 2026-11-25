@@ -2,7 +2,7 @@
 
 import { useWorkspace } from "@/lib/useWorkspace";
 import { api } from "@v1/backend/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import {
   Calendar,
   ChevronDown,
@@ -15,6 +15,7 @@ import {
   Sparkles,
   Trash2,
   Unlock,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -40,13 +41,72 @@ export default function PayrollOverviewPage() {
 
   const [helpOpen, setHelpOpen] = useState(true);
   const [activeMonth, setActiveMonth] = useState("Nov");
+  const [activeYear, setActiveYear] = useState("2026");
 
-  // Interactive control states matching greytHR operational toggles
-  const [payrollInputsLocked, setPayrollInputsLocked] = useState(true);
-  const [employeeViewReleased, setEmployeeViewReleased] = useState(true);
-  const [itStatementReleased, setItStatementReleased] = useState(true);
-  const [payrollLocked, setPayrollLocked] = useState(true);
+  // Map month label to 2-digit month
+  const MONTH_TO_NUM: Record<string, string> = {
+    Jan: "01",
+    Feb: "02",
+    Mar: "03",
+    Apr: "04",
+    May: "05",
+    Jun: "06",
+    Jul: "07",
+    Aug: "08",
+    Sep: "09",
+    Oct: "10",
+    Nov: "11",
+    Dec: "12",
+  };
+
+  // Active month period format derived dynamically from selected month & year (e.g., "2026-11")
+  const periodMonth = `${activeYear}-${MONTH_TO_NUM[activeMonth] ?? "11"}`;
+
+  // Real Convex query for active-workspace payroll overview (Net Pay, Gross, Deductions, Lifecycle stats)
+  const overview = useQuery(
+    api.payrollLifecycle.getPayrollOverview,
+    effectiveWorkspaceId ? { workspaceId: effectiveWorkspaceId, periodMonth } : "skip"
+  );
+
+  // Real Convex query for persistent payroll controls
+  const controls = useQuery(
+    api.payrollLifecycle.getPayrollControls,
+    effectiveWorkspaceId ? { workspaceId: effectiveWorkspaceId, periodMonth } : "skip"
+  );
+
+  // Real Convex query for operational exceptions & payout pending
+  const exceptions = useQuery(
+    api.payrollLifecycle.getPayrollOperationalExceptions,
+    effectiveWorkspaceId ? { workspaceId: effectiveWorkspaceId, periodMonth } : "skip"
+  );
+
+  const updateControl = useMutation(api.payrollLifecycle.updatePayrollControl);
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const payrollInputsLocked = controls?.payrollInputsLocked ?? true;
+  const employeeViewReleased = controls?.employeeViewReleased ?? true;
+  const itStatementReleased = controls?.itStatementReleased ?? true;
+  const payrollLocked = controls?.payrollLocked ?? true;
+
+  const handleToggle = async (
+    field: "payrollInputsLocked" | "employeeViewReleased" | "itStatementReleased" | "payrollLocked",
+    val: boolean,
+    label: string
+  ) => {
+    if (!effectiveWorkspaceId) return;
+    try {
+      await updateControl({
+        workspaceId: effectiveWorkspaceId,
+        periodMonth,
+        field,
+        value: val,
+      });
+      showToast(label);
+    } catch (err: unknown) {
+      showToast((err as Error)?.message || "Failed to update control");
+    }
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -69,7 +129,30 @@ export default function PayrollOverviewPage() {
     { label: "Mar", year: "2027", locked: false },
   ];
 
-  const totalEmployeesCount = employees?.length ?? 33;
+  const totalEmployeesCount = overview?.totalEmployees ?? (employees?.length ?? 0);
+  const netPayAmount = overview?.netPay ?? 0;
+  const grossPayAmount = overview?.grossPay ?? 0;
+  const deductionsAmount = overview?.deductions ?? 0;
+  const workDaysCount = overview?.workDays ?? 30;
+  const additionsCount = overview?.additionsCount ?? 0;
+  const settlementsCount = overview?.settlementsCount ?? 0;
+  const exclusionsCount = overview?.exclusionsCount ?? 0;
+  const separationsCount = overview?.separationsCount ?? 0;
+  const deltaVsPrev = overview?.deltaCount ?? 0;
+  const hasPayrollRun = overview?.hasRun ?? false;
+
+  // Format INR currency values
+  const formatINR = (val: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 2,
+    }).format(val);
+  };
+
+  // Compute donut chart stroke percentages dynamically based on real gross and net pay
+  const grossDash = grossPayAmount > 0 ? Math.round(((grossPayAmount - deductionsAmount) / grossPayAmount) * 100) : 0;
+  const dedDash = grossPayAmount > 0 ? 100 - grossDash : 0;
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#F7F7F7] text-[#394657] font-sans antialiased text-[14px]">
@@ -140,11 +223,17 @@ export default function PayrollOverviewPage() {
                   key={m.label}
                   onClick={() => {
                     setActiveMonth(m.label);
+                    setActiveYear(m.year);
                     showToast(`Selected ${m.label} ${m.year} payroll`);
                   }}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setActiveMonth(m.label); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setActiveMonth(m.label);
+                      setActiveYear(m.year);
+                    }
+                  }}
                   className={`flex flex-col items-center justify-center cursor-pointer px-4 py-1.5 rounded transition text-center min-w-[76px] relative select-none ${
                     isSelected
                       ? "bg-[#3557CA] text-white font-semibold shadow-xs"
@@ -220,7 +309,7 @@ export default function PayrollOverviewPage() {
             </div>
             <div className="flex items-center gap-1.5 text-xs text-[#5A6A7C] italic mt-0.5">
               <span>
-                Cutoff from 01 {activeMonth} 2026 to 30 {activeMonth} 2026
+                Cutoff from 01 {activeMonth} {activeYear} to {workDaysCount} {activeMonth} {activeYear}
               </span>
               <button
                 type="button"
@@ -235,7 +324,11 @@ export default function PayrollOverviewPage() {
 
           <div className="flex items-center gap-3">
             <span
-              title="Payroll Processed on 04 Nov 2026"
+              title={
+                hasPayrollRun
+                  ? `Payroll Processed${overview?.finalizedAt ? ` on ${new Date(overview.finalizedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}` : ""}`
+                  : `Payroll Not Processed for ${activeMonth} ${activeYear}`
+              }
               className="text-[#0d6efd] cursor-pointer"
             >
               <Info className="h-5 w-5" />
@@ -260,10 +353,18 @@ export default function PayrollOverviewPage() {
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#FCD2CA]" />
                 <span className="text-lg font-bold text-[#394657]">
-                  ₹19,33,496.00
+                  {overview === undefined ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-slate-400 inline" />
+                  ) : hasPayrollRun ? (
+                    formatINR(netPayAmount)
+                  ) : (
+                    "₹0.00"
+                  )}
                 </span>
               </div>
-              <p className="text-xs text-[#5A6A7C] pl-4">Net Pay</p>
+              <p className="text-xs text-[#5A6A7C] pl-4">
+                {hasPayrollRun ? "Net Pay" : "Net Pay (Payroll Not Processed)"}
+              </p>
             </div>
 
             {/* Custom Circular Doughnut Chart matching greytHR overview */}
@@ -274,7 +375,7 @@ export default function PayrollOverviewPage() {
                   <path
                     className="text-[#A6B7F7]"
                     strokeWidth="4"
-                    strokeDasharray="92, 100"
+                    strokeDasharray={hasPayrollRun && grossPayAmount > 0 ? `${grossDash}, 100` : "0, 100"}
                     strokeLinecap="round"
                     stroke="currentColor"
                     fill="none"
@@ -284,8 +385,8 @@ export default function PayrollOverviewPage() {
                   <path
                     className="text-[#FCD2CA]"
                     strokeWidth="4"
-                    strokeDasharray="8, 100"
-                    strokeDashoffset="-92"
+                    strokeDasharray={hasPayrollRun && deductionsAmount > 0 ? `${dedDash}, 100` : "0, 100"}
+                    strokeDashoffset={hasPayrollRun && grossPayAmount > 0 ? `-${grossDash}` : "0"}
                     strokeLinecap="round"
                     stroke="currentColor"
                     fill="none"
@@ -303,7 +404,13 @@ export default function PayrollOverviewPage() {
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-2xs bg-[#A6B7F7]" />
                       <span className="font-semibold text-slate-800">
-                        ₹20,89,498.00
+                        {overview === undefined ? (
+                          <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" />
+                        ) : hasPayrollRun ? (
+                          formatINR(grossPayAmount)
+                        ) : (
+                          "₹0.00"
+                        )}
                       </span>
                     </div>
                     <div className="text-[11px] text-[#5A6A7C] pl-3.5">
@@ -314,7 +421,13 @@ export default function PayrollOverviewPage() {
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-2xs bg-[#71DBE3]" />
                       <span className="font-semibold text-slate-800">
-                        ₹1,56,002.00
+                        {overview === undefined ? (
+                          <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" />
+                        ) : hasPayrollRun ? (
+                          formatINR(deductionsAmount)
+                        ) : (
+                          "₹0.00"
+                        )}
                       </span>
                     </div>
                     <div className="text-[11px] text-[#5A6A7C] pl-3.5">
@@ -326,7 +439,9 @@ export default function PayrollOverviewPage() {
                   <td className="py-2" colSpan={2}>
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-2xs bg-[#37C0D3]" />
-                      <span className="font-semibold text-slate-800">30</span>
+                      <span className="font-semibold text-slate-800">
+                        {workDaysCount}
+                      </span>
                     </div>
                     <div className="text-[11px] text-[#5A6A7C] pl-3.5">
                       Work Days
@@ -344,11 +459,15 @@ export default function PayrollOverviewPage() {
             </h3>
             <div className="rounded-lg bg-[#EDFAED] border border-[#E2F0E2] p-3 mt-3 mb-4">
               <div className="text-lg font-bold text-[#394657]">
-                {totalEmployeesCount}
+                {overview === undefined ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-400 inline" />
+                ) : (
+                  totalEmployeesCount
+                )}
               </div>
               <div className="text-xs text-[#5A6A7C]">Total Employees</div>
               <div className="text-xs text-[#48A84D] font-medium mt-0.5">
-                +1 vs previous month
+                {deltaVsPrev >= 0 ? `+${deltaVsPrev}` : deltaVsPrev} vs previous month
               </div>
             </div>
 
@@ -359,7 +478,9 @@ export default function PayrollOverviewPage() {
                   <td className="py-1">
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-2xs bg-[#A6B7F7]" />
-                      <span className="font-semibold">01</span>
+                      <span className="font-semibold">
+                        {String(additionsCount).padStart(2, "0")}
+                      </span>
                     </div>
                     <div className="text-[11px] text-[#5A6A7C] pl-3.5">
                       Addition
@@ -368,7 +489,9 @@ export default function PayrollOverviewPage() {
                   <td className="py-1">
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-2xs bg-[#FCD2CA]" />
-                      <span className="font-semibold">00</span>
+                      <span className="font-semibold">
+                        {String(settlementsCount).padStart(2, "0")}
+                      </span>
                     </div>
                     <div className="text-[11px] text-[#5A6A7C] pl-3.5">
                       Settlements
@@ -379,7 +502,9 @@ export default function PayrollOverviewPage() {
                   <td className="py-2">
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-2xs bg-[#8BDECE]" />
-                      <span className="font-semibold">00</span>
+                      <span className="font-semibold">
+                        {String(exclusionsCount).padStart(2, "0")}
+                      </span>
                     </div>
                     <div className="text-[11px] text-[#5A6A7C] pl-3.5">
                       Exclusion
@@ -388,7 +513,9 @@ export default function PayrollOverviewPage() {
                   <td className="py-2">
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-2xs bg-[#E2BBED]" />
-                      <span className="font-semibold">00</span>
+                      <span className="font-semibold">
+                        {String(separationsCount).padStart(2, "0")}
+                      </span>
                     </div>
                     <div className="text-[11px] text-[#5A6A7C] pl-3.5">
                       Separation
@@ -408,10 +535,7 @@ export default function PayrollOverviewPage() {
                 <div className="inline-flex rounded shadow-2xs border border-[#CBD5E1]">
                   <button
                     type="button"
-                    onClick={() => {
-                      setPayrollInputsLocked(false);
-                      showToast("Payroll inputs unlocked");
-                    }}
+                    onClick={() => handleToggle("payrollInputsLocked", false, "Payroll inputs unlocked")}
                     className={`px-3 py-1 transition ${
                       !payrollInputsLocked
                         ? "bg-[#3557CA] text-white font-semibold rounded-l"
@@ -422,10 +546,7 @@ export default function PayrollOverviewPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setPayrollInputsLocked(true);
-                      showToast("Payroll inputs locked");
-                    }}
+                    onClick={() => handleToggle("payrollInputsLocked", true, "Payroll inputs locked")}
                     className={`px-3 py-1 transition ${
                       payrollInputsLocked
                         ? "bg-[#3557CA] text-white font-semibold rounded-r"
@@ -443,10 +564,7 @@ export default function PayrollOverviewPage() {
                 <div className="inline-flex rounded shadow-2xs border border-[#CBD5E1]">
                   <button
                     type="button"
-                    onClick={() => {
-                      setEmployeeViewReleased(true);
-                      showToast("Employee payslip view released");
-                    }}
+                    onClick={() => handleToggle("employeeViewReleased", true, "Employee payslip view released")}
                     className={`px-3 py-1 transition ${
                       employeeViewReleased
                         ? "bg-[#3557CA] text-white font-semibold rounded-l"
@@ -457,10 +575,7 @@ export default function PayrollOverviewPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setEmployeeViewReleased(false);
-                      showToast("Employee payslip view placed on hold");
-                    }}
+                    onClick={() => handleToggle("employeeViewReleased", false, "Employee payslip view placed on hold")}
                     className={`px-3 py-1 transition ${
                       !employeeViewReleased
                         ? "bg-[#3557CA] text-white font-semibold rounded-r"
@@ -496,10 +611,7 @@ export default function PayrollOverviewPage() {
                 <div className="inline-flex rounded shadow-2xs border border-[#CBD5E1]">
                   <button
                     type="button"
-                    onClick={() => {
-                      setItStatementReleased(true);
-                      showToast("IT Statement released to employee portal");
-                    }}
+                    onClick={() => handleToggle("itStatementReleased", true, "IT Statement released to employee portal")}
                     className={`px-3 py-1 transition ${
                       itStatementReleased
                         ? "bg-[#3557CA] text-white font-semibold rounded-l"
@@ -510,10 +622,7 @@ export default function PayrollOverviewPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setItStatementReleased(false);
-                      showToast("IT Statement employee view held");
-                    }}
+                    onClick={() => handleToggle("itStatementReleased", false, "IT Statement employee view held")}
                     className={`px-3 py-1 transition ${
                       !itStatementReleased
                         ? "bg-[#3557CA] text-white font-semibold rounded-r"
@@ -531,10 +640,7 @@ export default function PayrollOverviewPage() {
                 <div className="inline-flex rounded shadow-2xs border border-[#CBD5E1]">
                   <button
                     type="button"
-                    onClick={() => {
-                      setPayrollLocked(false);
-                      showToast("Payroll unlocked for reprocessing");
-                    }}
+                    onClick={() => handleToggle("payrollLocked", false, "Payroll unlocked for reprocessing")}
                     className={`px-3 py-1 transition ${
                       !payrollLocked
                         ? "bg-[#3557CA] text-white font-semibold rounded-l"
@@ -545,10 +651,7 @@ export default function PayrollOverviewPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setPayrollLocked(true);
-                      showToast("Payroll locked successfully");
-                    }}
+                    onClick={() => handleToggle("payrollLocked", true, "Payroll locked successfully")}
                     className={`px-3 py-1 transition ${
                       payrollLocked
                         ? "bg-[#3557CA] text-white font-semibold rounded-r"
@@ -571,7 +674,15 @@ export default function PayrollOverviewPage() {
               Negative Salary
             </h4>
             <div className="flex-1 flex items-center justify-center text-xs text-[#7F8FA4]">
-              No Records
+              {exceptions === undefined ? (
+                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+              ) : exceptions.negativeSalaryCount > 0 ? (
+                <span className="text-base font-bold text-red-600">
+                  {exceptions.negativeSalaryCount} Records
+                </span>
+              ) : (
+                "No Records"
+              )}
             </div>
           </div>
 
@@ -581,7 +692,15 @@ export default function PayrollOverviewPage() {
               Hold Salary Payout
             </h4>
             <div className="flex-1 flex items-center justify-center text-xs text-[#7F8FA4]">
-              No Records
+              {exceptions === undefined ? (
+                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+              ) : exceptions.holdSalaryCount > 0 ? (
+                <span className="text-base font-bold text-amber-600">
+                  {exceptions.holdSalaryCount} Records
+                </span>
+              ) : (
+                "No Records"
+              )}
             </div>
           </div>
 
@@ -591,7 +710,15 @@ export default function PayrollOverviewPage() {
               Stop Salary Processing
             </h4>
             <div className="flex-1 flex items-center justify-center text-xs text-[#7F8FA4]">
-              No Records
+              {exceptions === undefined ? (
+                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+              ) : exceptions.stopProcessingCount > 0 ? (
+                <span className="text-base font-bold text-red-500">
+                  {exceptions.stopProcessingCount} Records
+                </span>
+              ) : (
+                "No Records"
+              )}
             </div>
           </div>
 
@@ -605,11 +732,23 @@ export default function PayrollOverviewPage() {
                 <span className="text-[12px] text-[#5A6A7C]">
                   Bank Transfer(Net Pay)
                 </span>
-                <span className="text-base font-bold text-[#0d6efd]">31</span>
+                <span className="text-base font-bold text-[#0d6efd]">
+                  {exceptions === undefined ? (
+                    <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
+                  ) : (
+                    exceptions.payoutPendingBankCount
+                  )}
+                </span>
               </div>
               <div className="flex items-baseline justify-between">
                 <span className="text-[12px] text-[#5A6A7C]">Cash</span>
-                <span className="text-base font-bold text-[#0d6efd]">2</span>
+                <span className="text-base font-bold text-[#0d6efd]">
+                  {exceptions === undefined ? (
+                    <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
+                  ) : (
+                    exceptions.payoutPendingCashCount
+                  )}
+                </span>
               </div>
             </div>
           </div>
@@ -620,7 +759,15 @@ export default function PayrollOverviewPage() {
               Settled Employees
             </h4>
             <div className="flex-1 flex items-center justify-center text-xs text-[#7F8FA4]">
-              No Records
+              {exceptions === undefined ? (
+                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+              ) : exceptions.settledEmployeesCount > 0 ? (
+                <span className="text-base font-bold text-slate-700">
+                  {exceptions.settledEmployeesCount} Settled
+                </span>
+              ) : (
+                "No Records"
+              )}
             </div>
           </div>
 

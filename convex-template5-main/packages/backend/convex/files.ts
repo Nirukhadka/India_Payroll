@@ -119,3 +119,118 @@ export const remove = mutation({
     await bump(ctx, f.workspaceId, "files", -1);
   },
 });
+
+// ── E-Sign & Document Center Workflow ────────────────────────────────────────
+
+export const requestESignature = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    fileId: v.id("files"),
+    signerUserId: v.id("users"),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    await requireRole(ctx, userId, args.workspaceId, ["admin"]);
+
+    const file = await ctx.db.get(args.fileId);
+    if (!file || file.workspaceId !== args.workspaceId) {
+      throw new Error("File not found in this workspace");
+    }
+
+    const signer = await ctx.db.get(args.signerUserId);
+    if (!signer) throw new Error("Signer user not found");
+
+    const actor = await ctx.db.get(userId);
+    const actorName = actor?.name || actor?.email || "Admin";
+    const now = Date.now();
+
+    const currentAudit = file.auditTrail || [];
+    currentAudit.push({
+      action: "signature_requested",
+      actorId: userId,
+      actorName,
+      timestamp: now,
+      notes: args.notes || `Requested signature from ${signer.name || signer.email}`,
+    });
+
+    await ctx.db.patch(args.fileId, {
+      eSignStatus: "pending_signature",
+      signerUserId: args.signerUserId,
+      signerName: signer.name || signer.email || "Signer",
+      auditTrail: currentAudit,
+    });
+
+    await audit(ctx, args.workspaceId, userId, "document.request_esign", {
+      fileId: args.fileId,
+      signerUserId: args.signerUserId,
+    });
+
+    return { success: true };
+  },
+});
+
+export const signDocument = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    fileId: v.id("files"),
+    signatureMethod: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    await requireMember(ctx, userId, args.workspaceId);
+
+    const file = await ctx.db.get(args.fileId);
+    if (!file || file.workspaceId !== args.workspaceId) {
+      throw new Error("File not found in this workspace");
+    }
+
+    if (file.signerUserId && file.signerUserId !== userId) {
+      throw new Error("Forbidden: You are not designated as the signer for this document");
+    }
+
+    if (file.eSignStatus === "signed") {
+      throw new Error("Document has already been signed");
+    }
+
+    const user = await ctx.db.get(userId);
+    const userName = user?.name || user?.email || "Signer";
+    const now = Date.now();
+
+    // Compute cryptographic verification audit hash
+    const enc = new TextEncoder();
+    const rawData = `${args.workspaceId}:${args.fileId}:${userId}:${now}`;
+    const hashBuf = await crypto.subtle.digest("SHA-256", enc.encode(rawData));
+    const auditHash = Array.from(new Uint8Array(hashBuf), (b) => b.toString(16).padStart(2, "0")).join("");
+
+    const currentAudit = file.auditTrail || [];
+    currentAudit.push({
+      action: "document_signed",
+      actorId: userId,
+      actorName: userName,
+      timestamp: now,
+      ipAddress: args.ipAddress,
+      notes: "Internal electronic signature captured with immutable audit record",
+    });
+
+    await ctx.db.patch(args.fileId, {
+      eSignStatus: "signed",
+      signerUserId: userId,
+      signerName: userName,
+      signedAt: now,
+      signatureMethod: args.signatureMethod || "INTERNAL_DIGITAL_AUDIT",
+      signatureAuditHash: auditHash,
+      auditTrail: currentAudit,
+    });
+
+    await audit(ctx, args.workspaceId, userId, "document.signed", {
+      fileId: args.fileId,
+      auditHash,
+    });
+
+    return { success: true, auditHash, signedAt: now };
+  },
+});

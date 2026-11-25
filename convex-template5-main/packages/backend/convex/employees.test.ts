@@ -828,5 +828,197 @@ describe("Employee Banking & Statutory Master Data — Convex Workflow & RBAC Su
       expect((removalLog?.meta as any)?.softRemoval).toBe(true);
     });
   });
+
+  test("Defect 1 & 2: Employee number and joining date persistence", async () => {
+    const t = convexTest(schema, modules);
+    const { ws, admin } = await seedEmployeeTestWorkspace(t);
+    const asAdmin = t.withIdentity(as(admin));
+
+    const empId = await asAdmin.mutation(api.employees.add, {
+      workspaceId: ws,
+      firstName: "Rajesh",
+      lastName: "Sharma",
+      email: "rajesh.sharma@testcompany.com",
+      employeeIdNumber: "EMP901",
+      joiningDate: "2026-11-01",
+      department: "Engineering",
+      designation: "Lead Architect",
+    });
+
+    const emp = await asAdmin.query(api.employees.getById, {
+      workspaceId: ws,
+      employeeId: empId,
+    });
+
+    expect(emp.employeeIdNumber).toBe("EMP901");
+    expect(emp.joiningDate).toBe("2026-11-01");
+
+    // Verify in directory list query
+    const list = await asAdmin.query(api.employees.list, { workspaceId: ws });
+    const found = list.find((e) => e._id === empId);
+    expect(found?.employeeIdNumber).toBe("EMP901");
+    expect(found?.joiningDate).toBe("2026-11-01");
+  });
+
+  test("Defect 3: Duplicate employee number rejected within same workspace", async () => {
+    const t = convexTest(schema, modules);
+    const { ws, admin } = await seedEmployeeTestWorkspace(t);
+    const asAdmin = t.withIdentity(as(admin));
+
+    await asAdmin.mutation(api.employees.add, {
+      workspaceId: ws,
+      firstName: "Rajesh",
+      lastName: "Sharma",
+      email: "rajesh.sharma@testcompany.com",
+      employeeIdNumber: "EMP901",
+      joiningDate: "2026-11-01",
+    });
+
+    // Attempting same employee number with different casing/whitespace must fail
+    await expect(
+      asAdmin.mutation(api.employees.add, {
+        workspaceId: ws,
+        firstName: "Duplicate",
+        lastName: "Person",
+        email: "duplicate@testcompany.com",
+        employeeIdNumber: "  emp901  ",
+        joiningDate: "2026-11-02",
+      }),
+    ).rejects.toThrow(/already assigned to another employee/);
+  });
+
+  test("Defect 3: Same employee number is allowed in different workspaces", async () => {
+    const t = convexTest(schema, modules);
+    const { ws: ws1, admin } = await seedEmployeeTestWorkspace(t);
+    const asAdmin = t.withIdentity(as(admin));
+
+    // Create second workspace
+    const now = Date.now();
+    const ws2 = await t.run(async (ctx: MutationCtx) => {
+      const wId = await ctx.db.insert("workspaces", {
+        name: "Second Workspace",
+        ownerId: admin,
+        createdAt: now,
+      });
+      await ctx.db.insert("members", {
+        workspaceId: wId,
+        userId: admin,
+        role: "admin",
+        createdAt: now,
+      });
+      return wId;
+    });
+
+    const emp1Id = await asAdmin.mutation(api.employees.add, {
+      workspaceId: ws1,
+      firstName: "Rajesh",
+      lastName: "Sharma",
+      email: "rajesh.sharma@testcompany.com",
+      employeeIdNumber: "EMP901",
+      joiningDate: "2026-11-01",
+    });
+
+    const emp2Id = await asAdmin.mutation(api.employees.add, {
+      workspaceId: ws2,
+      firstName: "Other",
+      lastName: "Employee",
+      email: "other@othercompany.com",
+      employeeIdNumber: "EMP901",
+      joiningDate: "2026-11-01",
+    });
+
+    expect(emp1Id).toBeDefined();
+    expect(emp2Id).toBeDefined();
+
+    const emp1 = await asAdmin.query(api.employees.getById, {
+      workspaceId: ws1,
+      employeeId: emp1Id,
+    });
+    const emp2 = await asAdmin.query(api.employees.getById, {
+      workspaceId: ws2,
+      employeeId: emp2Id,
+    });
+
+    expect(emp1.employeeIdNumber).toBe("EMP901");
+    expect(emp2.employeeIdNumber).toBe("EMP901");
+  });
+
+  test("Defect 3: Update mutation also enforces employee number uniqueness", async () => {
+    const t = convexTest(schema, modules);
+    const { ws, admin } = await seedEmployeeTestWorkspace(t);
+    const asAdmin = t.withIdentity(as(admin));
+
+    const emp1Id = await asAdmin.mutation(api.employees.add, {
+      workspaceId: ws,
+      firstName: "Emp1",
+      lastName: "User",
+      email: "emp1@testcompany.com",
+      employeeIdNumber: "EMP001",
+    });
+
+    const emp2Id = await asAdmin.mutation(api.employees.add, {
+      workspaceId: ws,
+      firstName: "Emp2",
+      lastName: "User",
+      email: "emp2@testcompany.com",
+      employeeIdNumber: "EMP002",
+    });
+
+    // Updating emp2 to emp1's employee number should fail
+    await expect(
+      asAdmin.mutation(api.employees.update, {
+        workspaceId: ws,
+        employeeId: emp2Id,
+        employeeIdNumber: "EMP001",
+      }),
+    ).rejects.toThrow(/already assigned to another employee/);
+
+    // Updating emp1 with its own employee number should succeed
+    await asAdmin.mutation(api.employees.update, {
+      workspaceId: ws,
+      employeeId: emp1Id,
+      employeeIdNumber: "EMP001",
+      firstName: "UpdatedEmp1",
+    });
+
+    const emp1 = await asAdmin.query(api.employees.getById, {
+      workspaceId: ws,
+      employeeId: emp1Id,
+    });
+    expect(emp1.firstName).toBe("UpdatedEmp1");
+    expect(emp1.employeeIdNumber).toBe("EMP001");
+  });
+
+  test("Defect 4: Legacy records with missing fields return undefined gracefully", async () => {
+    const t = convexTest(schema, modules);
+    const { ws, admin } = await seedEmployeeTestWorkspace(t);
+    const asAdmin = t.withIdentity(as(admin));
+
+    // Legacy employee record with no employeeIdNumber or joiningDate
+    const legacyEmpId = await t.run(async (ctx: MutationCtx) => {
+      return ctx.db.insert("employees", {
+        workspaceId: ws,
+        firstName: "Old",
+        lastName: "Legacy",
+        email: "legacy.user@testcompany.com",
+        status: "active",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
+
+    const emp = await asAdmin.query(api.employees.getById, {
+      workspaceId: ws,
+      employeeId: legacyEmpId,
+    });
+
+    expect(emp.employeeIdNumber).toBeUndefined();
+    expect(emp.joiningDate).toBeUndefined();
+
+    const list = await asAdmin.query(api.employees.list, { workspaceId: ws });
+    const legacyInList = list.find((e) => e._id === legacyEmpId);
+    expect(legacyInList?.employeeIdNumber).toBeUndefined();
+    expect(legacyInList?.joiningDate).toBeUndefined();
+  });
 });
 

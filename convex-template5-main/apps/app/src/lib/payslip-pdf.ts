@@ -412,7 +412,14 @@ export function generatePayslipPdfString(data: PayslipData): string {
   // 1. COMPANY HEADER
   // -------------------------------------------------------------
   const headerBottomY = boxTopY - headerH;
-  drawLine(margin, headerBottomY, margin + contentWidth, headerBottomY, [0.15, 0.15, 0.15], 0.75);
+  drawLine(
+    margin,
+    headerBottomY,
+    margin + contentWidth,
+    headerBottomY,
+    [0.15, 0.15, 0.15],
+    0.75,
+  );
 
   // Yellow logo badge with official VICTOR CHASEX asset
   const logoW = 105;
@@ -437,7 +444,6 @@ export function generatePayslipPdfString(data: PayslipData): string {
   );
   streamLines.push("/Im1 Do");
   streamLines.push("Q");
-
 
   // Centered Company Details in header area
   const headerCenterX = margin + logoW + (contentWidth - logoW) / 2;
@@ -479,7 +485,14 @@ export function generatePayslipPdfString(data: PayslipData): string {
   // 2. EMPLOYEE DETAILS SECTION
   // -------------------------------------------------------------
   const empBottomY = headerBottomY - empH;
-  drawLine(margin, empBottomY, margin + contentWidth, empBottomY, [0.15, 0.15, 0.15], 0.75);
+  drawLine(
+    margin,
+    empBottomY,
+    margin + contentWidth,
+    empBottomY,
+    [0.15, 0.15, 0.15],
+    0.75,
+  );
 
   // Vertical line dividing left and right columns
   drawLine(midX, empBottomY, midX, headerBottomY, [0.15, 0.15, 0.15], 0.75);
@@ -542,13 +555,34 @@ export function generatePayslipPdfString(data: PayslipData): string {
   // 3. EARNINGS & DEDUCTIONS TABLE
   // -------------------------------------------------------------
   const tableHeaderBottomY = empBottomY - tableHeaderH;
-  drawLine(margin, tableHeaderBottomY, margin + contentWidth, tableHeaderBottomY, [0.15, 0.15, 0.15], 0.75);
+  drawLine(
+    margin,
+    tableHeaderBottomY,
+    margin + contentWidth,
+    tableHeaderBottomY,
+    [0.15, 0.15, 0.15],
+    0.75,
+  );
 
   const tableTotalsTopY = tableHeaderBottomY - rowCount * tableRowH;
-  drawLine(margin, tableTotalsTopY, margin + contentWidth, tableTotalsTopY, [0.15, 0.15, 0.15], 0.75);
+  drawLine(
+    margin,
+    tableTotalsTopY,
+    margin + contentWidth,
+    tableTotalsTopY,
+    [0.15, 0.15, 0.15],
+    0.75,
+  );
 
   const tableBottomY = tableTotalsTopY - tableFooterH;
-  drawLine(margin, tableBottomY, margin + contentWidth, tableBottomY, [0.15, 0.15, 0.15], 0.75);
+  drawLine(
+    margin,
+    tableBottomY,
+    margin + contentWidth,
+    tableBottomY,
+    [0.15, 0.15, 0.15],
+    0.75,
+  );
 
   // Center vertical divider splitting Earnings and Deductions all the way through totals
   drawLine(midX, tableBottomY, midX, empBottomY, [0.15, 0.15, 0.15], 0.75);
@@ -573,8 +607,24 @@ export function generatePayslipPdfString(data: PayslipData): string {
     if (!item) continue;
     const y = tableHeaderBottomY - 9.5 - i * tableRowH;
     drawText(item.name, margin + 8, y, 7.5, "regular", [0.15, 0.15, 0.15]);
-    drawText(formatPayslipAmount(item.master), masterX, y, 7.5, "regular", [0.15, 0.15, 0.15], "right");
-    drawText(formatPayslipAmount(item.amount), earnAmountX, y, 7.5, "regular", [0.08, 0.08, 0.08], "right");
+    drawText(
+      formatPayslipAmount(item.master),
+      masterX,
+      y,
+      7.5,
+      "regular",
+      [0.15, 0.15, 0.15],
+      "right",
+    );
+    drawText(
+      formatPayslipAmount(item.amount),
+      earnAmountX,
+      y,
+      7.5,
+      "regular",
+      [0.08, 0.08, 0.08],
+      "right",
+    );
   }
 
   // Deductions Rows
@@ -583,28 +633,96 @@ export function generatePayslipPdfString(data: PayslipData): string {
     if (!item) continue;
     const y = tableHeaderBottomY - 9.5 - i * tableRowH;
     drawText(item.name, midX + 8, y, 7.5, "regular", [0.15, 0.15, 0.15]);
-    drawText(formatPayslipAmount(item.amount), dedAmountX, y, 7.5, "regular", [0.08, 0.08, 0.08], "right");
+    drawText(
+      formatPayslipAmount(item.amount),
+      dedAmountX,
+      y,
+      7.5,
+      "regular",
+      [0.08, 0.08, 0.08],
+      "right",
+    );
   }
 
   // Totals Row
   const totalsY = tableTotalsTopY - 10.5;
   const masterGross = data.masterGrossSalary ?? data.grossSalary;
-  drawText("Total Earnings", margin + 8, totalsY, 7.8, "bold", [0.08, 0.08, 0.08]);
-  drawText(formatPayslipAmount(masterGross), masterX, totalsY, 7.8, "bold", [0.08, 0.08, 0.08], "right");
-  drawText(formatPayslipAmount(data.grossSalary), earnAmountX, totalsY, 7.8, "bold", [0.08, 0.08, 0.08], "right");
+  drawText(
+    "Total Earnings",
+    margin + 8,
+    totalsY,
+    7.8,
+    "bold",
+    [0.08, 0.08, 0.08],
+  );
+  drawText(
+    formatPayslipAmount(masterGross),
+    masterX,
+    totalsY,
+    7.8,
+    "bold",
+    [0.08, 0.08, 0.08],
+    "right",
+  );
+  drawText(
+    formatPayslipAmount(data.grossSalary),
+    earnAmountX,
+    totalsY,
+    7.8,
+    "bold",
+    [0.08, 0.08, 0.08],
+    "right",
+  );
 
-  drawText("Total Deductions", midX + 8, totalsY, 7.8, "bold", [0.08, 0.08, 0.08]);
-  drawText(formatPayslipAmount(data.totalDeductions), dedAmountX, totalsY, 7.8, "bold", [0.08, 0.08, 0.08], "right");
+  drawText(
+    "Total Deductions",
+    midX + 8,
+    totalsY,
+    7.8,
+    "bold",
+    [0.08, 0.08, 0.08],
+  );
+  drawText(
+    formatPayslipAmount(data.totalDeductions),
+    dedAmountX,
+    totalsY,
+    7.8,
+    "bold",
+    [0.08, 0.08, 0.08],
+    "right",
+  );
 
   // -------------------------------------------------------------
   // 4. NET PAY SECTION
   // -------------------------------------------------------------
   const netPayLabelY = tableBottomY - 11;
-  drawText("Net Pay for the Month", margin + 8, netPayLabelY, 8.2, "bold", [0.08, 0.08, 0.08]);
-  drawText(formatPayslipAmount(data.netSalary), masterX + 38, netPayLabelY, 8.5, "bold", [0.08, 0.08, 0.08], "right");
+  drawText(
+    "Net Pay for the Month",
+    margin + 8,
+    netPayLabelY,
+    8.2,
+    "bold",
+    [0.08, 0.08, 0.08],
+  );
+  drawText(
+    formatPayslipAmount(data.netSalary),
+    masterX + 38,
+    netPayLabelY,
+    8.5,
+    "bold",
+    [0.08, 0.08, 0.08],
+    "right",
+  );
 
   const inWords = data.netPayInWords || numberToIndianWords(data.netSalary);
-  drawText(`(${inWords})`, margin + 8, tableBottomY - 22, 7.2, "italic", [0.25, 0.25, 0.25]);
+  drawText(
+    `(${inWords})`,
+    margin + 8,
+    tableBottomY - 22,
+    7.2,
+    "italic",
+    [0.25, 0.25, 0.25],
+  );
 
   // -------------------------------------------------------------
   // 5. SYSTEM GENERATED NOTICE (BELOW OUTER BOX)

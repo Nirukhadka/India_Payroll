@@ -1,4 +1,6 @@
-export function GreytHRIcon({ className = "text-cyan-500" }: { className?: string }) {
+export function GreytHRIcon({
+  className = "text-cyan-500",
+}: { className?: string }) {
   return (
     <svg
       width="18"
@@ -8,11 +10,7 @@ export function GreytHRIcon({ className = "text-cyan-500" }: { className?: strin
       className={`shrink-0 ${className}`}
       aria-hidden="true"
     >
-      <path
-        d="M12 2L21 12L12 22L3 12Z"
-        fill="currentColor"
-        opacity="0.9"
-      />
+      <path d="M12 2L21 12L12 22L3 12Z" fill="currentColor" opacity="0.9" />
     </svg>
   );
 }

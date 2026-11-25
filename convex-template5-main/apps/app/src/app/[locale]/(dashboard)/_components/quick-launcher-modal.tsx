@@ -10,7 +10,6 @@ import {
   GitPullRequest,
   BarChart3,
   HeartHandshake,
-  ShoppingBag,
 } from "lucide-react";
 
 export interface LauncherAppItem {
@@ -81,15 +80,6 @@ const APPS: LauncherAppItem[] = [
     borderColor: "rgb(252, 233, 230)",
     iconColor: "rgb(245, 135, 115)",
     svg: <HeartHandshake className="h-4 w-4" />,
-  },
-  {
-    id: "unite",
-    name: "Unite Marketplace",
-    href: "/admin/unite",
-    isComingSoon: false,
-    borderColor: "rgb(255, 230, 238)",
-    iconColor: "rgb(240, 110, 153)",
-    svg: <ShoppingBag className="h-4 w-4" />,
   },
 ];
 

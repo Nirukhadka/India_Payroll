@@ -41,7 +41,7 @@ export default function CompanyBankPage() {
 
   let banksData: any = undefined;
   try { banksData = useQuery(api.systemSettings.getCompanyBanks); } catch (e) { banksData = undefined; }
-  const banks = banksData || [];
+  const banks: any[] = banksData || [];
   let saveCompanyBank: any = null;
   try { saveCompanyBank = useMutation(api.systemSettings.saveCompanyBank); } catch (e) { saveCompanyBank = null; }
   let deleteCompanyBank: any = null;

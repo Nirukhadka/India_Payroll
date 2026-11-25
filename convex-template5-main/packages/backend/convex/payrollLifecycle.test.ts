@@ -52,6 +52,7 @@ const modules: Record<string, () => Promise<any>> =
         "./professionalTax.ts": () => import("./professionalTax"),
         "./lwf.ts": () => import("./lwf"),
         "./statutoryTds.ts": () => import("./statutoryTds"),
+        "./payrollLifecycle.ts": () => import("./payrollLifecycle"),
         "./_generated/api.js": () => import("./_generated/api.js"),
         "./_generated/server.js": () => import("./_generated/server.js"),
       };
@@ -368,5 +369,308 @@ describe("Full IndiaPay End-to-End Payroll Lifecycle & Immutability Audit", () =
     const reCheckedItem = reCheckedRun.items[0]!;
     expect(reCheckedItem.basicSalary).toBe(50000); // Retained original 50,000, not hiked 90,000
     expect(reCheckedItem.grossSalary).toBe(80000);
+  });
+
+  test("Phase 4: Financial Integrity, Settlement Evidence, Partial Payments & Audit Trail", async () => {
+    const t = convexTest(schema, modules);
+
+    let ownerId!: Id<"users">;
+    let adminId!: Id<"users">;
+    let unauthorizedUserId!: Id<"users">;
+    let wsId!: Id<"workspaces">;
+    let otherWsId!: Id<"workspaces">;
+    let emp1Id!: Id<"employees">;
+    let emp2Id!: Id<"employees">;
+
+    await t.run(async (ctx: MutationCtx) => {
+      ownerId = await ctx.db.insert("users", {
+        name: "Fin Owner",
+        email: "finowner@indiapay.com",
+      });
+      adminId = await ctx.db.insert("users", {
+        name: "Fin Admin",
+        email: "finadmin@indiapay.com",
+      });
+      unauthorizedUserId = await ctx.db.insert("users", {
+        name: "Sneaky User",
+        email: "sneaky@other.com",
+      });
+
+      wsId = await ctx.db.insert("workspaces", {
+        name: "Fintech Corp India",
+        ownerId,
+        createdAt: Date.now(),
+      });
+
+      otherWsId = await ctx.db.insert("workspaces", {
+        name: "Competitor Corp",
+        ownerId: unauthorizedUserId,
+        createdAt: Date.now(),
+      });
+
+      await ctx.db.insert("members", {
+        workspaceId: wsId,
+        userId: ownerId,
+        role: "owner",
+        createdAt: Date.now(),
+      });
+      await ctx.db.insert("members", {
+        workspaceId: wsId,
+        userId: adminId,
+        role: "admin",
+        createdAt: Date.now(),
+      });
+      await ctx.db.insert("members", {
+        workspaceId: otherWsId,
+        userId: unauthorizedUserId,
+        role: "owner",
+        createdAt: Date.now(),
+      });
+
+      emp1Id = await ctx.db.insert("employees", {
+        workspaceId: wsId,
+        firstName: "Aarav",
+        lastName: "Patel",
+        email: "aarav@fintech.in",
+        employeeIdNumber: "EMP-001",
+        status: "active",
+        bankAccountNumber: "987654321098",
+        bankName: "HDFC Bank",
+        ifscCode: "HDFC0000123",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+
+      emp2Id = await ctx.db.insert("employees", {
+        workspaceId: wsId,
+        firstName: "Diya",
+        lastName: "Sharma",
+        email: "diya@fintech.in",
+        employeeIdNumber: "EMP-002",
+        status: "active",
+        bankAccountNumber: "123456789012",
+        bankName: "ICICI Bank",
+        ifscCode: "ICIC0000456",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
+
+    const asAdmin = t.withIdentity(as(adminId));
+    const asUnauthorized = t.withIdentity(as(unauthorizedUserId));
+
+    // Create an approved payroll run with 2 payroll items
+    let payrollRunId!: Id<"payrollRuns">;
+    let item1Id!: Id<"payrollItems">;
+    let item2Id!: Id<"payrollItems">;
+
+    await t.run(async (ctx: MutationCtx) => {
+      payrollRunId = await ctx.db.insert("payrollRuns", {
+        workspaceId: wsId,
+        periodMonth: "2026-05",
+        startDate: "2026-05-01",
+        endDate: "2026-05-31",
+        status: "approved",
+        totalEmployees: 2,
+        totalGrossSalary: 150000,
+        totalLopDeduction: 0,
+        totalCustomDeductions: 0,
+        totalStatutoryDeductions: 10000,
+        totalNetSalary: 140000,
+        createdById: adminId,
+        approvedAt: Date.now(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+
+      item1Id = await ctx.db.insert("payrollItems", {
+        workspaceId: wsId,
+        payrollRunId,
+        employeeId: emp1Id,
+        basicSalary: 60000,
+        allowances: [
+          { name: "HRA", amount: 25000 },
+          { name: "Special Allowance", amount: 15000 },
+        ],
+        grossSalary: 100000,
+        lopDays: 0,
+        lopDeduction: 0,
+        customDeductions: [],
+        totalCustomDeductions: 0,
+        statutoryDeductions: [
+          { name: "Provident Fund", amount: 1800, isConfigured: true },
+          { name: "Professional Tax", amount: 200, isConfigured: true },
+          { name: "TDS", amount: 5000, isConfigured: true },
+        ],
+        totalStatutoryDeductions: 7000,
+        employerContributions: [],
+        totalDeductions: 7000,
+        netSalary: 93000,
+        hasSalaryStructure: true,
+        warnings: [],
+        remainingBalance: 93000,
+        amountPaid: 0,
+        paymentStatus: "PENDING",
+        paymentMode: "bank_transfer",
+        createdAt: Date.now(),
+      });
+
+      item2Id = await ctx.db.insert("payrollItems", {
+        workspaceId: wsId,
+        payrollRunId,
+        employeeId: emp2Id,
+        basicSalary: 30000,
+        allowances: [
+          { name: "HRA", amount: 12000 },
+          { name: "Special Allowance", amount: 8000 },
+        ],
+        grossSalary: 50000,
+        lopDays: 0,
+        lopDeduction: 0,
+        customDeductions: [],
+        totalCustomDeductions: 0,
+        statutoryDeductions: [
+          { name: "Provident Fund", amount: 1800, isConfigured: true },
+          { name: "Professional Tax", amount: 200, isConfigured: true },
+          { name: "TDS", amount: 1000, isConfigured: true },
+        ],
+        totalStatutoryDeductions: 3000,
+        employerContributions: [],
+        totalDeductions: 3000,
+        netSalary: 47000,
+        hasSalaryStructure: true,
+        warnings: [],
+        remainingBalance: 47000,
+        amountPaid: 0,
+        paymentStatus: "PENDING",
+        paymentMode: "bank_transfer",
+        createdAt: Date.now(),
+      });
+    });
+
+    // 1. Mandatory Evidence Reference Requirement
+    await expect(
+      asAdmin.mutation(api.payrollLifecycle.recordPaymentSettlement, {
+        workspaceId: wsId,
+        payrollItemId: item1Id,
+        targetStatus: "PAID",
+        paymentAmount: 93000,
+        paymentMode: "bank_transfer",
+        evidenceReference: "", // Empty evidence rejected
+      })
+    ).rejects.toThrow("verified settlement evidence reference");
+
+    // 2. Partial Payment Transition (PARTIALLY_PAID)
+    const partResult = await asAdmin.mutation(api.payrollLifecycle.recordPaymentSettlement, {
+      workspaceId: wsId,
+      payrollItemId: item1Id,
+      targetStatus: "PARTIALLY_PAID",
+      paymentAmount: 50000,
+      paymentMode: "bank_transfer",
+      evidenceReference: "NEFT-PARTIAL-001",
+    });
+    expect(partResult.success).toBe(true);
+    expect(partResult.status).toBe("PARTIALLY_PAID");
+    expect(partResult.amountPaid).toBe(50000);
+    expect(partResult.remainingBalance).toBe(43000);
+
+    // 3. Complete Final Settlement with Bank UTR (PAID)
+    const fullResult = await asAdmin.mutation(api.payrollLifecycle.recordPaymentSettlement, {
+      workspaceId: wsId,
+      payrollItemId: item1Id,
+      targetStatus: "PAID",
+      paymentAmount: 43000,
+      paymentMode: "bank_transfer",
+      evidenceReference: "HDFC-UTR-99887766",
+    });
+    expect(fullResult.success).toBe(true);
+    expect(fullResult.status).toBe("PAID");
+    expect(fullResult.amountPaid).toBe(93000);
+    expect(fullResult.remainingBalance).toBe(0);
+
+    // 4. Duplicate Payment Prevention on already PAID item
+    await expect(
+      asAdmin.mutation(api.payrollLifecycle.recordPaymentSettlement, {
+        workspaceId: wsId,
+        payrollItemId: item1Id,
+        targetStatus: "PAID",
+        paymentAmount: 1000,
+        paymentMode: "bank_transfer",
+        evidenceReference: "HDFC-UTR-NEW-000",
+      })
+    ).rejects.toThrow("already fully PAID");
+
+    // 5. Duplicate Reference Protection across different employees
+    await expect(
+      asAdmin.mutation(api.payrollLifecycle.recordPaymentSettlement, {
+        workspaceId: wsId,
+        payrollItemId: item2Id,
+        targetStatus: "PAID",
+        paymentAmount: 47000,
+        paymentMode: "bank_transfer",
+        evidenceReference: "HDFC-UTR-99887766", // Already used for item1!
+      })
+    ).rejects.toThrow("Duplicate payment reference detected");
+
+    // 6. Settle item 2 successfully with distinct UTR
+    const emp2Result = await asAdmin.mutation(api.payrollLifecycle.recordPaymentSettlement, {
+      workspaceId: wsId,
+      payrollItemId: item2Id,
+      targetStatus: "PAID",
+      paymentAmount: 47000,
+      paymentMode: "bank_transfer",
+      evidenceReference: "ICIC-UTR-11223344",
+    });
+    expect(emp2Result.status).toBe("PAID");
+    expect(emp2Result.remainingBalance).toBe(0);
+
+    // 7. Settlement Audit History Verification
+    await t.run(async (ctx: MutationCtx) => {
+      const logs = await ctx.db
+        .query("payrollSettlementAuditLogs")
+        .withIndex("by_workspace", (q) => q.eq("workspaceId", wsId))
+        .collect();
+      // Should have 3 logs: 1 partial + 1 full for item1, 1 full for item2
+      expect(logs.length).toBe(3);
+      expect(logs.some((l) => l.evidenceReference === "NEFT-PARTIAL-001")).toBe(true);
+      expect(logs.some((l) => l.evidenceReference === "HDFC-UTR-99887766")).toBe(true);
+      expect(logs.some((l) => l.evidenceReference === "ICIC-UTR-11223344")).toBe(true);
+    });
+
+    // 8. Bank Payout Summary Aggregations & Account Number Masking
+    const payoutSummary = await asAdmin.query(api.payrollLifecycle.getBankPayoutSummary, {
+      workspaceId: wsId,
+      periodMonth: "2026-05",
+    });
+    expect(payoutSummary.hasRun).toBe(true);
+    expect(payoutSummary.totalNetPayout).toBe(140000);
+    expect(payoutSummary.bankTransferTotal).toBe(140000);
+    expect(payoutSummary.statusCounts.PAID).toBe(2);
+    expect(payoutSummary.records.length).toBe(2);
+
+    const record1 = payoutSummary.records.find((r) => r.employeeCode === "EMP-001");
+    expect(record1).toBeDefined();
+    expect(record1!.bankAccountNumberMasked).toBe("••••••••1098"); // Masked for privacy
+    expect(record1!.bankAccountNumberRaw).toBe("987654321098");
+    expect(record1!.ifscCode).toBe("HDFC0000123");
+
+    // 9. Strict Authorization and Cross-Tenant Security Checks
+    await expect(
+      asUnauthorized.query(api.payrollLifecycle.getBankPayoutSummary, {
+        workspaceId: wsId, // unauthorized user accessing other tenant
+        periodMonth: "2026-05",
+      })
+    ).rejects.toThrow();
+
+    await expect(
+      asUnauthorized.mutation(api.payrollLifecycle.recordPaymentSettlement, {
+        workspaceId: wsId,
+        payrollItemId: item1Id,
+        targetStatus: "PAID",
+        paymentAmount: 5000,
+        paymentMode: "bank_transfer",
+        evidenceReference: "MALICIOUS-REF-001",
+      })
+    ).rejects.toThrow();
   });
 });

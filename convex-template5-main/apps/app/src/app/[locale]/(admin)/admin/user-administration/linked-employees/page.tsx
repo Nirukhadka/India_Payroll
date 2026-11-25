@@ -1,6 +1,8 @@
 "use client";
 
+import { useWorkspace } from "@/lib/useWorkspace";
 import { api } from "@v1/backend/convex/_generated/api";
+import type { Id } from "@v1/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import {
   AlertCircle,
@@ -28,6 +30,8 @@ type LinkedAccount = {
 };
 
 export default function LinkedEmployeeAccountPage() {
+  const { current, workspaces } = useWorkspace();
+  const effectiveWorkspaceId = current ?? workspaces[0]?._id;
   const [showHelp, setShowHelp] = useState(true);
   const [employeeFilter, setEmployeeFilter] = useState("All");
   const [modalOpen, setModalOpen] = useState(false);
@@ -44,7 +48,10 @@ export default function LinkedEmployeeAccountPage() {
   const linkedAccounts = useQuery(api.userAdministration.getLinkedEmployees, {
     employeeFilter: employeeFilter !== "All" ? employeeFilter : undefined,
   });
-  const employees = useQuery(api.employees.list);
+  const employees = useQuery(
+    api.employees.list,
+    effectiveWorkspaceId ? { workspaceId: effectiveWorkspaceId } : "skip",
+  );
   const addMapping = useMutation(api.userAdministration.addLinkedEmployee);
   const removeMapping = useMutation(
     api.userAdministration.removeLinkedEmployee,
@@ -53,7 +60,7 @@ export default function LinkedEmployeeAccountPage() {
   const handleOpenAdd = () => {
     setError(null);
     setSelectedEmpId(employees?.[0]?._id || "");
-    setFromDate(new Date().toISOString().split("T")[0]);
+    setFromDate(new Date().toISOString().split("T")[0] || "");
     setToDate("");
     setModalOpen(true);
   };

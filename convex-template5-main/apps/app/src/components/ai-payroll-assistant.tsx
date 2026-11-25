@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
 import { Button } from "@v1/ui/button";
 import { Input } from "@v1/ui/input";
-import { Bot, Send, X, ChevronDown, Loader2, Sparkles } from "lucide-react";
+import { Bot, ChevronDown, Loader2, Send, Sparkles, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -47,12 +47,16 @@ const SUGGESTED_QUESTIONS = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function AIPayrollAssistant({ payrollContext }: AIPayrollAssistantProps) {
+export function AIPayrollAssistant({
+  payrollContext,
+}: AIPayrollAssistantProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [previousInteractionId, setPreviousInteractionId] = useState<string | null>(null);
+  const [previousInteractionId, setPreviousInteractionId] = useState<
+    string | null
+  >(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -76,7 +80,7 @@ export function AIPayrollAssistant({ payrollContext }: AIPayrollAssistantProps) 
           `  - ${e.employeeName} (${e.department}): Gross ₹${e.grossSalary.toLocaleString("en-IN")}, ` +
           `Net ₹${e.netSalary.toLocaleString("en-IN")}, LOP ₹${e.lopDeduction.toLocaleString("en-IN")} (${e.lopDays} days), ` +
           `Custom Deductions ₹${e.totalCustomDeductions.toLocaleString("en-IN")}, ` +
-          `Salary Structure: ${e.hasSalaryStructure ? "Yes" : "NO ⚠️"}`
+          `Salary Structure: ${e.hasSalaryStructure ? "Yes" : "NO ⚠️"}`,
       )
       .join("\n");
 
@@ -187,7 +191,8 @@ INSTRUCTIONS:
         const updated = [...prev];
         updated[updated.length - 1] = {
           role: "assistant",
-          content: "⚠️ Error: Failed to get a response. Please check your Gemini API key.",
+          content:
+            "⚠️ Error: Failed to get a response. Please check your Gemini API key.",
           streaming: false,
         };
         return updated;
@@ -213,12 +218,17 @@ INSTRUCTIONS:
         size="icon"
         title="AI Payroll Assistant"
       >
-        {isOpen ? <ChevronDown className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
+        {isOpen ? (
+          <ChevronDown className="h-5 w-5" />
+        ) : (
+          <Sparkles className="h-5 w-5" />
+        )}
       </Button>
 
       {/* Chat panel */}
       {isOpen && (
-        <div className="fixed bottom-20 right-6 z-50 w-[380px] rounded-2xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden"
+        <div
+          className="fixed bottom-20 right-6 z-50 w-[380px] rounded-2xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden"
           style={{ height: "520px" }}
         >
           {/* Header */}
@@ -230,7 +240,7 @@ INSTRUCTIONS:
                 <p className="text-[10px] opacity-70">Powered by Gemini</p>
               </div>
             </div>
-            <button
+            <button type="button"
               onClick={() => setIsOpen(false)}
               className="text-primary-foreground/70 hover:text-primary-foreground"
             >
@@ -243,11 +253,12 @@ INSTRUCTIONS:
             {messages.length === 0 && (
               <div className="space-y-3">
                 <p className="text-xs text-primary/60 text-center">
-                  Ask me anything about your <strong>{payrollContext.periodMonth}</strong> payroll data.
+                  Ask me anything about your{" "}
+                  <strong>{payrollContext.periodMonth}</strong> payroll data.
                 </p>
                 <div className="grid grid-cols-1 gap-2">
                   {SUGGESTED_QUESTIONS.map((q) => (
-                    <button
+                    <button type="button"
                       key={q}
                       onClick={() => sendMessage(q)}
                       className="rounded-lg border border-border bg-card px-3 py-2 text-left text-xs text-primary hover:bg-primary/5 transition-colors"
@@ -261,7 +272,7 @@ INSTRUCTIONS:
 
             {messages.map((msg, i) => (
               <div
-                key={i}
+                key={`${msg.role}-${i}-${msg.content.slice(0, 10)}`}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div

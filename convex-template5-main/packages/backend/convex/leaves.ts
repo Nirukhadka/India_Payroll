@@ -132,6 +132,9 @@ export const submit = mutation({
       throw new ConvexError("Forbidden: You cannot submit leave requests for another employee");
     }
 
+    if (!args.reason || !args.reason.trim()) {
+      throw new ConvexError("Reason is required.");
+    }
     if (args.startDate > args.endDate) {
       throw new ConvexError("Start date cannot be after end date");
     }
@@ -374,6 +377,9 @@ export const submitMyLeave = mutation({
       throw new ConvexError("No employee record linked to your account.");
     }
 
+    if (!args.reason || !args.reason.trim()) {
+      throw new ConvexError("Reason is required.");
+    }
     if (args.startDate > args.endDate) {
       throw new ConvexError("Start date must be on or before end date");
     }
@@ -430,6 +436,24 @@ export const submitMyLeave = mutation({
       if (rhConsumedDays + daysCount > 2) {
         throw new ConvexError(
           `Restricted Holiday quota exceeded. You have already applied for ${rhConsumedDays} of 2 allowable RH days for ${currentYear}.`,
+        );
+      }
+    }
+
+    // Sick Leave Balance Validation
+    if (args.leaveType === "sick") {
+      const sickLeaves = existingActiveLeaves.filter((l) => l.leaveType === "sick");
+      const sickApproved = sickLeaves
+        .filter((l) => l.status === "approved")
+        .reduce((sum, l) => sum + (l.daysCount || 0), 0);
+      const sickPending = sickLeaves
+        .filter((l) => l.status === "pending")
+        .reduce((sum, l) => sum + (l.daysCount || 0), 0);
+      const sickGranted = 12; // IndiaPay annual policy default
+      const availableSick = Math.max(0, sickGranted - sickApproved - sickPending);
+      if (daysCount > availableSick) {
+        throw new ConvexError(
+          `Insufficient leave balance. You are applying for ${daysCount} day(s), but have only ${availableSick} Sick Leave day(s) remaining.`,
         );
       }
     }

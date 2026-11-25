@@ -239,14 +239,17 @@ async function getActiveWorkspace(
   ctx:
     | import("./_generated/server").QueryCtx
     | import("./_generated/server").MutationCtx,
-) {
+): Promise<import("./_generated/dataModel").Doc<"workspaces"> | null> {
   const ws = await ctx.db.query("workspaces").first();
   if (ws) return ws;
-  const wsId = await ctx.db.insert("workspaces", {
-    name: "Victor Chasex Pvt Ltd",
-    slug: "victorchasex",
-  });
-  return await ctx.db.get(wsId);
+  if ("insert" in ctx.db) {
+    const wsId = await (ctx.db as any).insert("workspaces", {
+      name: "Victor Chasex Pvt Ltd",
+      slug: "victorchasex",
+    });
+    return (await ctx.db.get(wsId)) as import("./_generated/dataModel").Doc<"workspaces"> | null;
+  }
+  return null;
 }
 
 // -----------------------------------------------------------------------------
@@ -561,6 +564,19 @@ export const listUsersWithRoles = query({
     if (!ws) return [];
 
     const users = await ctx.db.query("users").collect();
+    const members = await ctx.db
+      .query("members")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", ws._id))
+      .collect();
+
+    const memberMap = new Map<string, { role: string; status: string }>();
+    for (const m of members) {
+      memberMap.set(m.userId, {
+        role: m.role,
+        status: m.status || "active",
+      });
+    }
+
     const roles = await ctx.db
       .query("userAdminRoles")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", ws._id))
@@ -571,16 +587,23 @@ export const listUsersWithRoles = query({
       roleMap.set(r.roleKey, r.name);
     }
 
-    let userList = users.map((u) => ({
-      _id: u._id,
-      name: u.name || u.username || "System User",
-      email: u.email || "no-email@indiapay.com",
-      role: u.role || "employee",
-      roleName: roleMap.get(u.role || "employee") || u.role || "Employee",
-      status: (u as unknown as { status?: string }).status || "active",
-      createdAt: u._creationTime,
-      lastLogin: "18 Nov 2026 @ 14:20:10",
-    }));
+    let userList = users.map((u) => {
+      const explicitRole = (u as unknown as { role?: string }).role;
+      const wsMember = memberMap.get(u._id);
+      const userRole = wsMember?.role || explicitRole || "employee";
+      const userStatus = wsMember?.status || (u as unknown as { status?: string }).status || "active";
+
+      return {
+        _id: u._id,
+        name: u.name || u.username || "System User",
+        email: u.email || "no-email@indiapay.com",
+        role: userRole,
+        roleName: roleMap.get(userRole) || userRole || "Employee",
+        status: userStatus,
+        createdAt: u._creationTime,
+        lastLogin: "18 Nov 2026 @ 14:20:10",
+      };
+    });
 
     if (args.search) {
       const q = args.search.toLowerCase();
@@ -614,9 +637,26 @@ export const updateUserRole = mutation({
     const user = await ctx.db.get(args.targetUserId);
     if (!user) throw new Error("User not found");
 
-    await ctx.db.patch(args.targetUserId, {
-      role: args.role,
-    });
+    const ws = await getActiveWorkspace(ctx);
+    if (ws) {
+      const member = await ctx.db
+        .query("members")
+        .withIndex("by_user_workspace", (q) =>
+          q.eq("userId", args.targetUserId).eq("workspaceId", ws._id),
+        )
+        .unique();
+
+      if (member) {
+        await ctx.db.patch(member._id, { role: args.role });
+      } else {
+        await ctx.db.insert("members", {
+          workspaceId: ws._id,
+          userId: args.targetUserId,
+          role: args.role,
+          createdAt: Date.now(),
+        });
+      }
+    }
 
     return { success: true };
   },
@@ -634,6 +674,55 @@ export const toggleUserStatus = mutation({
     const user = await ctx.db.get(args.targetUserId);
     if (!user) throw new Error("User not found");
 
+    const ws = await getActiveWorkspace(ctx);
+    if (ws) {
+      // Find the member record for this workspace
+      const member = await ctx.db
+        .query("members")
+        .withIndex("by_user_workspace", (q) =>
+          q.eq("userId", args.targetUserId).eq("workspaceId", ws._id),
+        )
+        .unique();
+
+      const newStatus = args.status === "inactive" || args.status === "suspended" ? "suspended" : "active";
+
+      if (member) {
+        // Protect last active administrator: Cannot suspend the last admin in workspace
+        const effectiveRole = member.role === "owner" ? "admin" : member.role;
+        if (effectiveRole === "admin" && newStatus === "suspended") {
+          const otherActiveAdmins = await ctx.db
+            .query("members")
+            .withIndex("by_workspace", (q) => q.eq("workspaceId", ws._id))
+            .filter((q) =>
+              q.and(
+                q.neq(q.field("_id"), member._id),
+                q.or(
+                  q.eq(q.field("role"), "admin"),
+                  q.eq(q.field("role"), "owner"),
+                ),
+                q.neq(q.field("status"), "suspended"),
+              ),
+            )
+            .first();
+
+          if (!otherActiveAdmins) {
+            throw new Error("Cannot suspend the last active administrator in this workspace");
+          }
+        }
+
+        await ctx.db.patch(member._id, { status: newStatus });
+      } else {
+        await ctx.db.insert("members", {
+          workspaceId: ws._id,
+          userId: args.targetUserId,
+          role: "member",
+          status: newStatus,
+          createdAt: Date.now(),
+        });
+      }
+    }
+
+    // Keep top-level user doc backwards-compatible
     await ctx.db.patch(args.targetUserId, {
       status: args.status,
     } as Record<string, unknown>);

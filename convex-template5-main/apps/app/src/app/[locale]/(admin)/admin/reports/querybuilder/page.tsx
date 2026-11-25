@@ -533,8 +533,10 @@ export default function QueryBuilderPage() {
                               value={fil.field}
                               onChange={(e) => {
                                 const copy = [...filters];
-                                copy[idx].field = e.target.value;
-                                setFilters(copy);
+                                if (copy[idx]) {
+                                  copy[idx].field = e.target.value;
+                                  setFilters(copy);
+                                }
                               }}
                               className="rounded border border-slate-200 p-1 bg-white"
                             >
@@ -549,8 +551,10 @@ export default function QueryBuilderPage() {
                               value={fil.operator}
                               onChange={(e) => {
                                 const copy = [...filters];
-                                copy[idx].operator = e.target.value as FilterOperatorType;
-                                setFilters(copy);
+                                if (copy[idx]) {
+                                  copy[idx].operator = e.target.value as FilterOperatorType;
+                                  setFilters(copy);
+                                }
                               }}
                               className="rounded border border-slate-200 p-1 bg-white"
                             >
@@ -566,8 +570,10 @@ export default function QueryBuilderPage() {
                               value={fil.value}
                               onChange={(e) => {
                                 const copy = [...filters];
-                                copy[idx].value = e.target.value;
-                                setFilters(copy);
+                                if (copy[idx]) {
+                                  copy[idx].value = e.target.value;
+                                  setFilters(copy);
+                                }
                               }}
                               placeholder="Value..."
                               className="flex-1 rounded border border-slate-200 p-1 bg-white"

@@ -221,14 +221,17 @@ async function getActiveWorkspace(
   ctx:
     | import("./_generated/server").QueryCtx
     | import("./_generated/server").MutationCtx,
-) {
+): Promise<import("./_generated/dataModel").Doc<"workspaces"> | null> {
   const ws = await ctx.db.query("workspaces").first();
   if (ws) return ws;
-  const wsId = await ctx.db.insert("workspaces", {
-    name: "Victor Chasex Pvt Ltd",
-    slug: "victorchasex",
-  });
-  return await ctx.db.get(wsId);
+  if ("insert" in ctx.db) {
+    const wsId = await (ctx.db as any).insert("workspaces", {
+      name: "Victor Chasex Pvt Ltd",
+      slug: "victorchasex",
+    });
+    return (await ctx.db.get(wsId)) as import("./_generated/dataModel").Doc<"workspaces"> | null;
+  }
+  return null;
 }
 
 // -----------------------------------------------------------------------------

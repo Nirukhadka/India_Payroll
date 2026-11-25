@@ -14,11 +14,11 @@ import {
   Terminal,
 } from "lucide-react";
 import { useState } from "react";
-import { AdminTopbar } from "../admin-topbar";
+import { AdminTopbar } from "../../admin-topbar";
 
 export default function SysAdminBackroomPage() {
   const user = useQuery(api.users.getUser);
-  const isAdmin = user?.role === "admin";
+  const isAdmin = (user as any)?.role === "admin";
   const [clearing, setClearing] = useState(false);
 
   const handleClearCache = () => {

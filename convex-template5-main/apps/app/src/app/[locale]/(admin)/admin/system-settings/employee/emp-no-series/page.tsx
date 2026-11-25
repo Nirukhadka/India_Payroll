@@ -35,7 +35,7 @@ export default function EmployeeNoSeriesPage() {
 
   let seriesData: any = undefined;
   try { seriesData = useQuery(api.systemSettings.getEmployeeNoSeries); } catch (e) { seriesData = undefined; }
-  const seriesList = seriesData || [];
+  const seriesList: any[] = seriesData || [];
   let saveSeries: any = null;
   try { saveSeries = useMutation(api.systemSettings.saveEmployeeNoSeries); } catch (e) { saveSeries = null; }
   let deleteSeries: any = null;

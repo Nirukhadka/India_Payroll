@@ -43,7 +43,7 @@ export default function StateSettingsPage() {
 
   let statesData: any = undefined;
   try { statesData = useQuery(api.systemSettings.getStates, { country: selectedCountry }); } catch (e) { statesData = undefined; }
-  const states = statesData || [];
+  const states: any[] = statesData || [];
   let saveState: any = null;
   try { saveState = useMutation(api.systemSettings.saveStateConfig); } catch (e) { saveState = null; }
 

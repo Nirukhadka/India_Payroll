@@ -14,11 +14,11 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
-import { AdminTopbar } from "../admin-topbar";
+import { AdminTopbar } from "../../admin-topbar";
 
 export default function UserAdministrationPage() {
   const user = useQuery(api.users.getUser);
-  const isAdmin = user?.role === "admin";
+  const isAdmin = (user as any)?.role === "admin";
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
 

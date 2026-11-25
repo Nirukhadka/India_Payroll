@@ -167,8 +167,8 @@ export default function LeaveApplyPage() {
 
   const currentAvailableBalance = useMemo(() => {
     if (!balances) return 0;
-    if (leaveType === "casual") return balances.casual?.balance ?? 1;
-    if (leaveType === "sick") return balances.sick?.balance ?? 0.5;
+    if (leaveType === "casual") return balances.casual?.balance ?? 0;
+    if (leaveType === "sick") return balances.sick?.balance ?? 0;
     if (leaveType === "unpaid") return 999;
     if (leaveType === "restricted_holiday")
       return balances.restricted_holiday?.balance ?? 2;
@@ -452,20 +452,19 @@ export default function LeaveApplyPage() {
                         className="w-full max-w-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#0091FF]"
                       >
                         <option value="sick">
-                          Sick Leave (Balance: {balances?.sick?.balance ?? 0.5})
-                        </option>
-                        <option value="casual">
-                          Casual Leave (Balance:{" "}
-                          {balances?.casual?.balance ?? 1})
+                          Sick Leave (Balance: {balances?.sick?.balance ?? 0})
                         </option>
                         <option value="unpaid">
                           Loss Of Pay (Unpaid Leave)
                         </option>
                         <option value="restricted_holiday">
-                          Restricted Holiday (RH)
+                          Restricted Holiday (RH - Balance: {balances?.restricted_holiday?.balance ?? 2})
                         </option>
                         <option value="comp_off">
-                          Compensatory Off (Comp-Off)
+                          Compensatory Off (Comp-Off - Balance: {balances?.comp_off?.balance ?? 0})
+                        </option>
+                        <option value="casual" disabled>
+                          Casual Leave (Disabled by policy)
                         </option>
                       </select>
                     </div>

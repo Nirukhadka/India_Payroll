@@ -142,13 +142,18 @@ export const submitReimbursementClaim = mutation({
     }
 
     const now = Date.now();
+    const claimNumber = `CLM-${new Date().toISOString().slice(0, 7).replace("-", "")}-${Math.floor(1000 + Math.random() * 9000)}`;
     const claimId = await ctx.db.insert("reimbursementClaims", {
       workspaceId: args.workspaceId,
+      claimNumber,
       employeeId: args.employeeId,
+      categoryCode: "MISC",
       claimType: args.claimType,
       claimAmount: args.claimAmount,
       expenseDate: args.expenseDate,
+      businessPurpose: args.description || "General business reimbursement",
       description: args.description,
+      taxTreatment: "REQUIRES_REVIEW",
       isTaxExempt: args.isTaxExempt,
       status: "SUBMITTED",
       createdAt: now,

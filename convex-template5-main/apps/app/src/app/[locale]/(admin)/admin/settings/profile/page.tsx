@@ -47,7 +47,6 @@ export default function MyProfileSettingsPage() {
   };
 
   const user = useQuery(api.users.getUser);
-  const employeeProfile = useQuery(api.employees.getMyProfile);
 
   // Modals state
   const [editInfoOpen, setEditInfoOpen] = useState(false);
@@ -124,11 +123,9 @@ export default function MyProfileSettingsPage() {
   const displayName =
     userProfile?.name ||
     userProfile?.username ||
-    employeeProfile?.firstName ||
     "Javeria";
   const displayEmail =
     userProfile?.email ||
-    employeeProfile?.email ||
     "fatheema@networkershome.com";
   const displayTimezone = userProfile?.timezone || "-";
   const displayBiography = userProfile?.biography || "-";

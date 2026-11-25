@@ -39,7 +39,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ThemeSwitcher } from "./theme-switcher";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -396,8 +395,7 @@ export function Sidebar() {
               </button>
             </div>
           )}
-          <div className="flex items-center justify-between">
-            <ThemeSwitcher />
+          <div className="flex items-center justify-end">
             <button
               type="button"
               disabled={isLoggingOut}

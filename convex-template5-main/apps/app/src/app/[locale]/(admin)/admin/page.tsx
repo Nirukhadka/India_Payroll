@@ -15,6 +15,48 @@ export default function AdminPage() {
   const [activeView, setActiveView] = useState<"welcome" | "dashboard">(
     "welcome",
   );
+  const [timeGreeting, setTimeGreeting] = useState<{
+    greeting: string;
+    illustration: string;
+    gradient: string;
+  }>({
+    greeting: "Good Morning,",
+    illustration: "/mornig_illustration.svg",
+    gradient:
+      "linear-gradient(181deg, rgba(1, 107, 179, 0.1) -11%, rgba(255, 255, 255, 0.1) 27%), linear-gradient(0deg, rgb(255, 255, 255), rgba(237, 237, 237, 0.1)), linear-gradient(0deg, rgb(255, 255, 255), rgba(255, 255, 255, 0.5))",
+  });
+
+  useEffect(() => {
+    // Dynamic Time-Based Greeting & Theme matching greytHR rules
+    // Morning: 05:00 - 11:59
+    // Afternoon: 12:00 - 16:59
+    // Evening: 17:00 - 04:59
+    const now = new Date();
+    const hour = now.getHours();
+
+    if (hour >= 5 && hour < 12) {
+      setTimeGreeting({
+        greeting: "Good Morning,",
+        illustration: "/mornig_illustration.svg",
+        gradient:
+          "linear-gradient(181deg, rgba(1, 107, 179, 0.1) -11%, rgba(255, 255, 255, 0.1) 27%), linear-gradient(0deg, rgb(255, 255, 255), rgba(237, 237, 237, 0.1)), linear-gradient(0deg, rgb(255, 255, 255), rgba(255, 255, 255, 0.5))",
+      });
+    } else if (hour >= 12 && hour < 17) {
+      setTimeGreeting({
+        greeting: "Good Afternoon,",
+        illustration: "/afternoon_illustration.svg",
+        gradient:
+          "linear-gradient(181deg, rgba(245, 158, 11, 0.1) -11%, rgba(255, 255, 255, 0.1) 27%), linear-gradient(0deg, rgb(255, 255, 255), rgba(237, 237, 237, 0.1)), linear-gradient(0deg, rgb(255, 255, 255), rgba(255, 255, 255, 0.5))",
+      });
+    } else {
+      setTimeGreeting({
+        greeting: "Good Evening,",
+        illustration: "/evening_illustration.svg",
+        gradient:
+          "linear-gradient(181deg, rgba(99, 102, 241, 0.1) -11%, rgba(255, 255, 255, 0.1) 27%), linear-gradient(0deg, rgb(255, 255, 255), rgba(237, 237, 237, 0.1)), linear-gradient(0deg, rgb(255, 255, 255), rgba(255, 255, 255, 0.5))",
+      });
+    }
+  }, []);
   const { current, workspaces, isLoading } = useWorkspace();
   const effectiveWorkspaceId = current ?? workspaces[0]?._id;
   const currentWorkspace = workspaces.find(
@@ -130,7 +172,7 @@ export default function AdminPage() {
                 {/* Greeting message (w: 637px, pl-6) */}
                 <div className="greeting-message pl-6 shrink-0 z-10 w-[637px]">
                   <h1 className="title text-[36px] font-normal leading-[54px] text-[#171E25] m-0 mb-[10px]">
-                    Good Morning,
+                    {timeGreeting.greeting}
                   </h1>
                   <p className="sub-title text-[18px] font-normal leading-[28px] text-[#5A6A7C] m-0 mb-[10px]">
                     Let&apos;s do great things together. 🚀 🌟
@@ -141,20 +183,19 @@ export default function AdminPage() {
                 <div
                   className="image-container w-[1203px] h-[253px] bg-no-repeat bg-cover shrink-0"
                   style={{
-                    backgroundImage: "url(/mornig_illustration.svg)",
+                    backgroundImage: `url(${timeGreeting.illustration})`,
                     backgroundPosition: "50% 50%",
                   }}
                 />
               </div>
 
-              {/* 2. Widget Container (mx: 12px, gap: 27px, w: 1848px) */}
-              <div className="widget-container mx-3 mt-0 flex items-start gap-[27px]">
-                {/* ── Left Column: Main Container with Morning Gradient (w: 1387px) ── */}
+              {/* 2. Widget Container (mx: 12px, gap: 27px) */}
+              <div className="widget-container mx-3 mt-0 flex flex-col xl:flex-row items-start gap-[27px]">
+                {/* ── Left Column: Main Container with Time-based Gradient (flex-1) ── */}
                 <div
-                  className="main-container w-[1387px] shrink-0 rounded-[12px] p-4"
+                  className="main-container flex-1 w-full rounded-[12px] p-4"
                   style={{
-                    background:
-                      "linear-gradient(181deg, rgba(1, 107, 179, 0.1) -11%, rgba(255, 255, 255, 0.1) 27%), linear-gradient(0deg, rgb(255, 255, 255), rgba(237, 237, 237, 0.1)), linear-gradient(0deg, rgb(255, 255, 255), rgba(255, 255, 255, 0.5))",
+                    background: timeGreeting.gradient,
                   }}
                 >
                   {/* A. My Favourites */}
@@ -184,7 +225,7 @@ export default function AdminPage() {
 
                       {/* Add Employee Card */}
                       <Link
-                        href="/employees"
+                        href="/admin/employee/admin-ops/add-employee"
                         className="newgen-action-item-card group flex h-[138px] w-[131px] flex-col justify-between rounded-[10px] bg-[#DBE3FF] p-2 hover:shadow-xs transition shrink-0"
                       >
                         <div className="top-container flex items-center justify-between">
@@ -296,8 +337,8 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {/* Right Tasks List Container with Border (w: 1132px, h: 348px) */}
-                      <div className="my-tasks-list-container w-[1132px] h-[348px] rounded-[11px] border border-[#E4E9F0] ml-3 flex flex-col justify-between overflow-hidden">
+                      {/* Right Tasks List Container with Border (flex-1, h: 348px) */}
+                      <div className="my-tasks-list-container flex-1 h-[348px] rounded-[11px] border border-[#E4E9F0] ml-3 flex flex-col justify-between overflow-hidden">
                         {/* Task Item (h: 74px) */}
                         <div className="my-individual-task flex items-center justify-between my-2 pr-10 h-[74px]">
                           <div className="flex items-stretch gap-4 h-full">
@@ -321,7 +362,7 @@ export default function AdminPage() {
                           </Link>
                         </div>
 
-                        {/* Official greytHR Helpdesk Graphic (w: 1130px, h: 152px) */}
+                        {/* Official greytHR Helpdesk Graphic (w-full, h: 152px) */}
                         <div
                           className="newgen-image-helpdesk h-[152px] w-full bg-cover bg-bottom bg-no-repeat select-none pointer-events-none"
                           style={{
@@ -333,72 +374,58 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* ── Right Column: Latest Updates Panel (w: 434px, h: 434px) ── */}
-                <div className="latest-updates-container w-[434px] h-[434px] shrink-0 rounded-[12px] bg-[#FCF2FF] p-4 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between pb-3">
-                      <div className="text-[16px] font-semibold text-[#3B4452]">
-                        Latest Updates
+                {/* ── Right Column: Latest Updates Container (w-[360px]) ── */}
+                <div className="right-container w-full xl:w-[360px] shrink-0 rounded-[12px] border border-[#E4E9F0] bg-white p-4 shadow-2xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#F1F5F9]">
+                    <div className="text-[16px] font-semibold text-[#1E293B]">
+                      Latest Updates
+                    </div>
+                    <span className="text-[11px] font-medium text-[#0284C7] bg-[#E0F2FE] px-2 py-0.5 rounded-full">
+                      Product
+                    </span>
+                  </div>
+
+                  <div className="mt-3.5 space-y-3.5">
+                    {/* Update Item 1 */}
+                    <div className="rounded-[8px] border border-[#E2E8F0] p-3 hover:bg-[#F8FAFC] transition">
+                      <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                        <span className="font-semibold text-[#0369A1]">Statutory Update</span>
+                        <span>Nov 2026</span>
                       </div>
-                      <Link
-                        href="/compliance"
-                        className="text-slate-500 hover:text-purple-600 transition"
-                      >
-                        <svg
-                          stroke="currentColor"
-                          fill="none"
-                          strokeWidth="2"
-                          viewBox="0 0 24 24"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <line x1="7" y1="17" x2="17" y2="7" />
-                          <polyline points="7 7 17 7 17 17" />
-                        </svg>
-                      </Link>
+                      <h4 className="mt-1 text-[13px] font-medium text-[#1E293B] leading-snug">
+                        FY 2026-27 New Tax Regime Auto-Declaration Form
+                      </h4>
+                      <p className="mt-1 text-[12px] text-[#64748B] leading-relaxed line-clamp-2">
+                        Updated TDS computation slabs and revised surcharge exemptions are now available for employee IT declaration.
+                      </p>
                     </div>
 
-                    <div className="space-y-4">
-                      <div className="rounded-[8px] bg-[#F5E3FA] p-2">
-                        <div className="text-[11px] font-normal text-[#94A3B8] mb-2">
-                          13 Nov 2026
-                        </div>
-                        <h3 className="text-[13px] font-normal text-[#3B4452] leading-snug">
-                          Pay Late Inputs in the Same Month with Supplementary
-                          Payroll in greytHR
-                        </h3>
+                    {/* Update Item 2 */}
+                    <div className="rounded-[8px] border border-[#E2E8F0] p-3 hover:bg-[#F8FAFC] transition">
+                      <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                        <span className="font-semibold text-[#059669]">Compliance Notice</span>
+                        <span>Nov 2026</span>
                       </div>
+                      <h4 className="mt-1 text-[13px] font-medium text-[#1E293B] leading-snug">
+                        EPFO ECR 2.0 Electronic File Verification
+                      </h4>
+                      <p className="mt-1 text-[12px] text-[#64748B] leading-relaxed line-clamp-2">
+                        Generate monthly PF ECR text files with 100% EPFO portal validation standards directly from the Reports Hub.
+                      </p>
+                    </div>
 
-                      <div className="rounded-[8px] bg-[#F5E3FA] p-2">
-                        <div className="text-[11px] font-normal text-[#94A3B8] mb-2">
-                          05 Nov 2026
-                        </div>
-                        <h3 className="text-[13px] font-normal text-[#3B4452] leading-snug">
-                          Migrate Past Performance Review Ratings and Documents to
-                          greytHR PMS
-                        </h3>
+                    {/* Update Item 3 */}
+                    <div className="rounded-[8px] border border-[#E2E8F0] p-3 hover:bg-[#F8FAFC] transition">
+                      <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                        <span className="font-semibold text-[#7C3AED]">Payroll Release</span>
+                        <span>Nov 2026</span>
                       </div>
-
-                      <div className="rounded-[8px] bg-[#F5E3FA] p-2">
-                        <div className="text-[11px] font-normal text-[#94A3B8] mb-2">
-                          02 Nov 2026
-                        </div>
-                        <h3 className="text-[13px] font-normal text-[#3B4452] leading-snug">
-                          Track Daily Hours by Project with Timesheets Daily
-                          Summary Report in greytHR
-                        </h3>
-                      </div>
-
-                      <div className="rounded-[8px] bg-[#F5E3FA] p-2">
-                        <div className="text-[11px] font-normal text-[#94A3B8] mb-2">
-                          30 Oct 2026
-                        </div>
-                        <h3 className="text-[13px] font-normal text-[#3B4452] leading-snug">
-                          People, Processes &amp; What’s on HR’s Radar
-                        </h3>
-                      </div>
+                      <h4 className="mt-1 text-[13px] font-medium text-[#1E293B] leading-snug">
+                        Instant Bank Payout Batch Processing
+                      </h4>
+                      <p className="mt-1 text-[12px] text-[#64748B] leading-relaxed line-clamp-2">
+                        Execute seamless NEFT/RTGS salary disbursements with automated payment file exports and instant salary slip dispatch.
+                      </p>
                     </div>
                   </div>
                 </div>

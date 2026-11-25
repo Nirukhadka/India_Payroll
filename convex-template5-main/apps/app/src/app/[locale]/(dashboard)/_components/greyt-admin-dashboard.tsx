@@ -84,9 +84,9 @@ export function GreytHRAdminDashboard({
 
           {/* 2. Widget Container (mx: 12px, gap: 27px, w: 1848px) */}
           <div className="widget-container mx-3 mt-0 flex items-start gap-[27px]">
-            {/* ── Left Column: Main Container with Morning Gradient (w: 1387px) ── */}
+            {/* ── Left Column: Main Container with Morning Gradient (w-full) ── */}
             <div
-              className="main-container w-[1387px] shrink-0 rounded-[12px] p-4"
+              className="main-container flex-1 rounded-[12px] p-4"
               style={{
                 background:
                   "linear-gradient(181deg, rgba(1, 107, 179, 0.1) -11%, rgba(255, 255, 255, 0.1) 27%), linear-gradient(0deg, rgb(255, 255, 255), rgba(237, 237, 237, 0.1)), linear-gradient(0deg, rgb(255, 255, 255), rgba(255, 255, 255, 0.5))",
@@ -230,8 +230,8 @@ export function GreytHRAdminDashboard({
                     </div>
                   </div>
 
-                  {/* Right Tasks List Container with Border (w: 1132px, h: 348px) */}
-                  <div className="my-tasks-list-container w-[1132px] h-[348px] rounded-[11px] border border-[#E4E9F0] ml-3 flex flex-col justify-between overflow-hidden">
+                  {/* Right Tasks List Container with Border (flex-1, h: 348px) */}
+                  <div className="my-tasks-list-container flex-1 h-[348px] rounded-[11px] border border-[#E4E9F0] ml-3 flex flex-col justify-between overflow-hidden">
                     {/* Task Item (h: 74px) */}
                     <div className="my-individual-task flex items-center justify-between my-2 pr-10 h-[74px]">
                       <div className="flex items-stretch gap-4 h-full">
@@ -255,83 +255,13 @@ export function GreytHRAdminDashboard({
                       </Link>
                     </div>
 
-                    {/* Official greytHR Helpdesk Graphic (w: 1130px, h: 152px) */}
+                    {/* Official greytHR Helpdesk Graphic (w-full, h: 152px) */}
                     <div
                       className="newgen-image-helpdesk h-[152px] w-full bg-cover bg-bottom bg-no-repeat select-none pointer-events-none"
                       style={{
                         backgroundImage: "url(/helpdesk.svg)",
                       }}
                     />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Right Column: Latest Updates Panel (w: 434px, h: 434px) ── */}
-            <div className="latest-updates-container w-[434px] h-[434px] shrink-0 rounded-[12px] bg-[#FCF2FF] p-4 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between pb-3">
-                  <div className="text-[16px] font-semibold text-[#3B4452]">
-                    Latest Updates
-                  </div>
-                  <Link
-                    href="/compliance"
-                    className="text-slate-500 hover:text-purple-600 transition"
-                  >
-                    <svg
-                      stroke="currentColor"
-                      fill="none"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <line x1="7" y1="17" x2="17" y2="7" />
-                      <polyline points="7 7 17 7 17 17" />
-                    </svg>
-                  </Link>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="rounded-[8px] bg-[#F5E3FA] p-2">
-                    <div className="text-[11px] font-normal text-[#94A3B8] mb-2">
-                      13 Nov 2026
-                    </div>
-                    <h3 className="text-[13px] font-normal text-[#3B4452] leading-snug">
-                      Pay Late Inputs in the Same Month with Supplementary
-                      Payroll in greytHR
-                    </h3>
-                  </div>
-
-                  <div className="rounded-[8px] bg-[#F5E3FA] p-2">
-                    <div className="text-[11px] font-normal text-[#94A3B8] mb-2">
-                      05 Nov 2026
-                    </div>
-                    <h3 className="text-[13px] font-normal text-[#3B4452] leading-snug">
-                      Migrate Past Performance Review Ratings and Documents to
-                      greytHR PMS
-                    </h3>
-                  </div>
-
-                  <div className="rounded-[8px] bg-[#F5E3FA] p-2">
-                    <div className="text-[11px] font-normal text-[#94A3B8] mb-2">
-                      02 Nov 2026
-                    </div>
-                    <h3 className="text-[13px] font-normal text-[#3B4452] leading-snug">
-                      Track Daily Hours by Project with Timesheets Daily
-                      Summary Report in greytHR
-                    </h3>
-                  </div>
-
-                  <div className="rounded-[8px] bg-[#F5E3FA] p-2">
-                    <div className="text-[11px] font-normal text-[#94A3B8] mb-2">
-                      30 Oct 2026
-                    </div>
-                    <h3 className="text-[13px] font-normal text-[#3B4452] leading-snug">
-                      People, Processes &amp; What’s on HR’s Radar
-                    </h3>
                   </div>
                 </div>
               </div>

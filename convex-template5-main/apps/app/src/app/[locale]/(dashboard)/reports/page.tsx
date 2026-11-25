@@ -73,16 +73,16 @@ export default function ReportsGalleryPage() {
     });
   };
 
-  // Convex Queries and Mutations
+  // Convex Queries and Mutations (Exact functions in reports.ts)
   const favorites = useQuery(
-    api.reports.getReportFavorites,
+    api.reports.listUserFavorites,
     effectiveWorkspaceId ? { workspaceId: effectiveWorkspaceId } : "skip"
   );
-  const toggleFavoriteMutation = useMutation(api.reports.toggleReportFavorite);
+  const toggleFavoriteMutation = useMutation(api.reports.toggleFavorite);
   const recordExecutionMutation = useMutation(api.reports.recordReportExecution);
 
   // Set of favorited report IDs for fast lookup
-  const favoriteIds = new Set(favorites?.map((f) => f.reportId) || []);
+  const favoriteIds = new Set<string>(favorites || []);
 
   const handleToggleFavorite = async (e: React.MouseEvent, reportId: string) => {
     e.stopPropagation();
@@ -106,16 +106,17 @@ export default function ReportsGalleryPage() {
 
   // Fetch real report preview data when report modal is opened
   const reportPreviewData = useQuery(
-    api.reports.generateReportPreview,
+    api.reports.generateReportData,
     effectiveWorkspaceId && selectedReport
       ? {
           workspaceId: effectiveWorkspaceId,
           reportId: selectedReport.id,
-          parameters: JSON.stringify({
-            periodMonth: reportPeriodMonth,
-            department: reportDepartment,
-            ...dynamicParamValues,
-          }),
+          periodMonth: dynamicParamValues.payrollMonth || reportPeriodMonth,
+          department: reportDepartment,
+          statutoryState: selectedState,
+          fromDate: dynamicParamValues.fromDate,
+          toDate: dynamicParamValues.toDate,
+          financialYear: dynamicParamValues.financialYear,
         }
       : "skip"
   );
@@ -171,7 +172,7 @@ export default function ReportsGalleryPage() {
   };
 
   // Filter Categories & Reports
-  const filteredCategories = REPORTS_REGISTRY.map((cat) => {
+  const filteredCategories: ReportCategoryDefinition[] = REPORTS_REGISTRY.map((cat) => {
     let repList = cat.reports;
 
     // Filter by State / Statutory Jurisdiction
@@ -399,15 +400,15 @@ export default function ReportsGalleryPage() {
           </div>
         </div>
 
-        {/* 3-Column Category Grid Matching greytHR Reference:
-            - Responsive 3-column layout on desktop, 2-col on tablet, 1-col on mobile
-            - White background with thin light-blue border (#BFDBFE)
-            - Teal/blue category header (#0284C7 / #0369A1)
-            - Stacked document icon (Files) on left of white category title
-            - Report names listed vertically with individual star icon beside each report
+        {/* 4-Column Compact Category Grid Matching greytHR Reference:
+            - Compact, predictable multi-column layout (columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4)
+            - Crisp square corners (rounded-none), light slate border (#D9E2EC)
+            - Signature deep blue-gray / hound blue category header (#02588D / #13548A) with stacked document icon
+            - 35px compact report rows with hairline bottom divider
+            - Inline favorite star immediately adjacent to report title
         */}
         {filteredCategories.length === 0 ? (
-          <div className="rounded-lg border border-[#E2E8F0] bg-white p-12 text-center shadow-2xs">
+          <div className="rounded border border-[#E2E8F0] bg-white p-12 text-center shadow-2xs">
             <Inbox className="h-8 w-8 text-slate-300 mx-auto mb-2" />
             <h3 className="font-bold text-slate-800 text-sm">No reports found</h3>
             <p className="text-xs text-slate-400 mt-1">
@@ -417,26 +418,26 @@ export default function ReportsGalleryPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
+          <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
             {filteredCategories.map((catGroup) => (
               <div
                 key={catGroup.category}
-                className="rounded border border-[#BFDBFE] bg-white shadow-2xs overflow-hidden transition-all hover:border-sky-300"
+                className="break-inside-avoid rounded-xs border border-[#CBD5E1] bg-white shadow-2xs overflow-hidden mb-4 transition-all hover:border-[#94A3B8]"
               >
-                {/* Category Card Header with teal/blue background and stacked document icon */}
-                <div className="bg-[#0284C7] px-3.5 py-2.5 flex items-center justify-between text-white">
+                {/* Category Card Header: Solid deep blue bar with white stacked document icon */}
+                <div className="bg-[#1A568C] px-3 py-2 flex items-center justify-between text-white select-none">
                   <div className="flex items-center gap-2 min-w-0">
-                    <Files className="h-4 w-4 text-white/90 shrink-0" />
-                    <h3 className="font-bold text-white text-xs tracking-wide truncate">
+                    <Files className="h-3.5 w-3.5 text-white/90 shrink-0" />
+                    <h3 className="font-bold text-white text-[12px] tracking-wide truncate">
                       {catGroup.category}
                     </h3>
                   </div>
-                  <span className="text-[10px] bg-white/20 text-white font-semibold px-2 py-0.5 rounded-full shrink-0">
+                  <span className="text-[10px] bg-white/20 text-white font-semibold px-1.5 py-0.2 rounded shrink-0">
                     {catGroup.reports.length}
                   </span>
                 </div>
 
-                {/* List of Reports in Category */}
+                {/* List of Reports in Category: Compact 34px-36px rows */}
                 <ul className="divide-y divide-slate-100">
                   {catGroup.reports.map((report) => {
                     const isFav = favoriteIds.has(report.id);
@@ -449,23 +450,23 @@ export default function ReportsGalleryPage() {
                             setSelectedReport(report);
                           }
                         }}
-                        className="px-3.5 py-2.5 hover:bg-[#F0F9FF] cursor-pointer transition-colors group flex items-center justify-between gap-2 text-xs"
+                        className="px-3 py-2 hover:bg-[#F0F7FF] cursor-pointer transition-colors group flex items-center justify-between gap-1.5 text-[12px] min-h-[35px]"
                       >
-                        <span className="font-normal text-slate-800 group-hover:text-sky-700 transition-colors flex-1 pr-2 leading-snug">
+                        <span className="font-normal text-slate-800 group-hover:text-[#1A568C] transition-colors leading-snug">
                           {report.name}
                         </span>
 
-                        {/* Star Favorite Button */}
+                        {/* Star Favorite Button immediately following text */}
                         <button
                           type="button"
                           onClick={(e) => handleToggleFavorite(e, report.id)}
-                          className="text-slate-300 hover:text-amber-500 transition-colors p-1 shrink-0"
+                          className="text-slate-300 hover:text-amber-500 transition-colors p-0.5 shrink-0 ml-1"
                           title={isFav ? "Remove Favorite" : "Add to Favorites"}
                           aria-label={isFav ? `Remove ${report.name} from Favorites` : `Add ${report.name} to Favorites`}
                         >
                           <Star
-                            className={`h-3.5 w-3.5 ${
-                              isFav ? "fill-amber-400 text-amber-500" : ""
+                            className={`h-3 w-3 ${
+                              isFav ? "fill-amber-400 text-amber-500" : "text-slate-300"
                             }`}
                           />
                         </button>
@@ -546,17 +547,16 @@ export default function ReportsGalleryPage() {
                           className="rounded border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-sky-500"
                         >
                           {field.options?.map((opt) => (
-                            <option key={opt} value={opt}>
-                              {opt}
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
                             </option>
                           ))}
                         </select>
                       ) : (
                         <input
-                          type={field.type === "month" ? "month" : field.type === "date" ? "date" : "text"}
+                          type={field.type === "date" ? "date" : "text"}
                           value={dynamicParamValues[field.name] ?? field.defaultValue ?? ""}
                           onChange={(e) => handleParamChange(field.name, e.target.value)}
-                          placeholder={field.description}
                           className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-sky-500"
                         />
                       )}
@@ -621,7 +621,7 @@ export default function ReportsGalleryPage() {
                 <button
                   type="button"
                   onClick={handleExecuteExport}
-                  disabled={isExporting || !reportPreviewData || reportPreviewData.length === 0}
+                  disabled={isExporting || !reportPreviewData || (reportPreviewData as unknown[]).length === 0}
                   className="inline-flex items-center gap-1.5 rounded bg-sky-600 px-4 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-sky-700 disabled:opacity-50 transition-colors cursor-pointer"
                 >
                   {isExporting ? (
@@ -642,7 +642,7 @@ export default function ReportsGalleryPage() {
                       Loading IndiaPay records...
                     </span>
                   </div>
-                ) : reportPreviewData.length === 0 ? (
+                ) : (reportPreviewData as unknown[]).length === 0 ? (
                   <div className="flex h-48 flex-col items-center justify-center text-center">
                     <Inbox className="h-8 w-8 text-slate-300 mb-1" />
                     <p className="text-xs text-slate-500">
@@ -654,7 +654,7 @@ export default function ReportsGalleryPage() {
                     <table className="w-full text-left text-xs text-slate-600 border-collapse">
                       <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-700 border-b border-slate-200">
                         <tr>
-                          {Object.keys(reportPreviewData[0] || {}).map((header) => (
+                          {Object.keys((reportPreviewData as Record<string, unknown>[])[0] || {}).map((header) => (
                             <th key={header} className="px-3.5 py-2.5 whitespace-nowrap">
                               {header}
                             </th>
@@ -662,9 +662,9 @@ export default function ReportsGalleryPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 bg-white">
-                        {reportPreviewData.map((row, idx) => (
+                        {(reportPreviewData as Record<string, unknown>[]).map((row: Record<string, unknown>, idx: number) => (
                           <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                            {Object.values(row).map((val, cellIdx) => (
+                            {Object.values(row).map((val: unknown, cellIdx: number) => (
                               <td key={cellIdx} className="px-3.5 py-2 whitespace-nowrap font-medium text-slate-800">
                                 {String(val ?? "—")}
                               </td>

@@ -234,6 +234,8 @@ export const add = mutation({
     phone: v.optional(v.string()),
     department: v.optional(v.string()),
     designation: v.optional(v.string()),
+    employeeIdNumber: v.optional(v.string()),
+    joiningDate: v.optional(v.string()),
     // Banking Details
     bankAccountHolderName: v.optional(v.string()),
     bankName: v.optional(v.string()),
@@ -265,6 +267,29 @@ export const add = mutation({
         "An employee with this email already exists in this workspace",
       );
     }
+
+    // Duplicate Employee Number Protection (Defect 3)
+    let normalizedEmployeeIdNumber: string | undefined = undefined;
+    if (args.employeeIdNumber && args.employeeIdNumber.trim()) {
+      normalizedEmployeeIdNumber = args.employeeIdNumber.trim().toUpperCase();
+      const existingWithEmpId = await ctx.db
+        .query("employees")
+        .withIndex("by_workspace_employee_id", (q) =>
+          q
+            .eq("workspaceId", args.workspaceId)
+            .eq("employeeIdNumber", normalizedEmployeeIdNumber),
+        )
+        .first();
+
+      if (existingWithEmpId && !existingWithEmpId.isRemoved) {
+        throw new ConvexError(
+          `Employee number '${normalizedEmployeeIdNumber}' is already assigned to another employee in this workspace.`,
+        );
+      }
+    }
+
+    // Joining Date normalization (Defect 2)
+    const normalizedJoiningDate = args.joiningDate?.trim() || undefined;
 
     // Validate optional banking & statutory fields
     const bankAccountHolderName = args.bankAccountHolderName?.trim()
@@ -298,6 +323,8 @@ export const add = mutation({
       department: args.department?.trim() || undefined,
       designation: args.designation?.trim() || undefined,
       status: "active",
+      employeeIdNumber: normalizedEmployeeIdNumber,
+      joiningDate: normalizedJoiningDate,
       bankAccountHolderName,
       bankName,
       bankAccountNumber,
@@ -362,6 +389,8 @@ export const update = mutation({
     designation: v.optional(v.string()),
     status: v.optional(v.union(v.literal("active"), v.literal("inactive"))),
     userId: v.optional(v.union(v.id("users"), v.null())),
+    employeeIdNumber: v.optional(v.string()),
+    joiningDate: v.optional(v.string()),
     // Banking Details
     bankAccountHolderName: v.optional(v.string()),
     bankName: v.optional(v.string()),
@@ -441,6 +470,37 @@ export const update = mutation({
     }
     if (updates.status !== undefined) {
       finalUpdates.status = updates.status;
+    }
+
+    if (updates.employeeIdNumber !== undefined) {
+      if (updates.employeeIdNumber.trim()) {
+        const normalizedEmpId = updates.employeeIdNumber.trim().toUpperCase();
+        const existingWithEmpId = await ctx.db
+          .query("employees")
+          .withIndex("by_workspace_employee_id", (q) =>
+            q
+              .eq("workspaceId", args.workspaceId)
+              .eq("employeeIdNumber", normalizedEmpId),
+          )
+          .first();
+
+        if (
+          existingWithEmpId &&
+          existingWithEmpId._id !== args.employeeId &&
+          !existingWithEmpId.isRemoved
+        ) {
+          throw new ConvexError(
+            `Employee number '${normalizedEmpId}' is already assigned to another employee in this workspace.`,
+          );
+        }
+        finalUpdates.employeeIdNumber = normalizedEmpId;
+      } else {
+        finalUpdates.employeeIdNumber = undefined;
+      }
+    }
+
+    if (updates.joiningDate !== undefined) {
+      finalUpdates.joiningDate = updates.joiningDate.trim() || undefined;
     }
 
     if (updates.email) {

@@ -125,6 +125,7 @@ export default function LeaveOverviewPage() {
             ? "Restricted Holiday"
             : "Comp Off";
         return {
+          id: l._id,
           name: emp ? `${emp.firstName} ${emp.lastName}` : "Demo Employee",
           empId: emp?.employeeIdNumber || "EMP-001",
           leaveType: formatType,
@@ -134,6 +135,7 @@ export default function LeaveOverviewPage() {
       })
     : [
         {
+          id: "demo-leave-1",
           name: "Ansu Anna Jose",
           empId: "VC-OL-019",
           leaveType: "Casual Leave",
@@ -141,6 +143,7 @@ export default function LeaveOverviewPage() {
           status: "Approved",
         },
         {
+          id: "demo-leave-2",
           name: "Nirmala Khadka",
           empId: "VC-OL-024",
           leaveType: "Sick Leave",
@@ -148,6 +151,7 @@ export default function LeaveOverviewPage() {
           status: "Approved",
         },
         {
+          id: "demo-leave-3",
           name: "Sumeet Sangam",
           empId: "NH-OL-660",
           leaveType: "Restricted Holiday",
@@ -478,8 +482,8 @@ export default function LeaveOverviewPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {teamOnLeave.map((item) => (
-                    <tr key={item.empId} className="hover:bg-slate-50/60 transition-colors">
+                  {teamOnLeave.map((item, idx) => (
+                    <tr key={item.id || `${item.empId}-${idx}`} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-2.5">
                         <div className="font-medium text-slate-800">
                           {item.name}

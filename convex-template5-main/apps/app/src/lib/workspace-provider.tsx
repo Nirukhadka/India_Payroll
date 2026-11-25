@@ -5,7 +5,7 @@ import type { Id } from "@v1/backend/convex/_generated/dataModel";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { createContext, useContext, useEffect, useState } from "react";
 
-type WS = { _id: Id<"workspaces">; name: string; role: string };
+type WS = { _id: Id<"workspaces">; name: string; role: string; status?: string };
 type Ctx = {
   workspaces: WS[];
   current: Id<"workspaces"> | null;
@@ -64,22 +64,32 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           ? window.localStorage.getItem("ws")
           : null;
       const match = workspaces.find((w) => w._id === saved);
-      return match?._id ?? workspaces[0]?._id ?? prev;
+      const chosen = match?._id ?? workspaces[0]?._id ?? prev;
+      if (chosen && typeof window !== "undefined") {
+        document.cookie = `ws=${chosen}; path=/; max-age=31536000; SameSite=Lax`;
+      }
+      return chosen;
     });
   }, [isAuthenticated, workspaces, ensure, ensuring]);
 
   const select = (id: Id<"workspaces">) => {
-    if (typeof window !== "undefined") window.localStorage.setItem("ws", id);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("ws", id);
+      document.cookie = `ws=${id}; path=/; max-age=31536000; SameSite=Lax`;
+    }
     setCurrent(id);
   };
 
-  const effectiveCurrent = current ?? (
-    workspaces && workspaces.length > 0
-      ? (typeof window !== "undefined" && window.localStorage.getItem("ws")
-          ? workspaces.find((w) => w._id === window.localStorage.getItem("ws"))?._id ?? workspaces[0]?._id ?? null
-          : workspaces[0]?._id ?? null)
-      : null
-  );
+  const effectiveCurrent =
+    current ??
+    (workspaces && workspaces.length > 0
+      ? typeof window !== "undefined" && window.localStorage.getItem("ws")
+        ? workspaces.find((w) => w._id === window.localStorage.getItem("ws"))
+            ?._id ??
+          workspaces[0]?._id ??
+          null
+        : workspaces[0]?._id ?? null
+      : null);
 
   return (
     <WorkspaceCtx.Provider

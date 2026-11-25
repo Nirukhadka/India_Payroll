@@ -18,7 +18,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { AdminTopbar } from "../admin-topbar";
+import { AdminTopbar } from "../../(admin)/admin/admin-topbar";
 
 export interface ReportsHeaderProps {
   currentPageTitle?: string;

@@ -63,19 +63,19 @@ export default function ReimbursementPage() {
   }, [claims, selfEmployee]);
 
   const totalClaimed = useMemo(() => {
-    return myClaims.reduce((acc: number, c: any) => acc + (c.claimedAmount || 0), 0);
+    return myClaims.reduce((acc: number, c: any) => acc + (c.claimAmount || c.claimedAmount || 0), 0);
   }, [myClaims]);
 
   const totalApproved = useMemo(() => {
     return myClaims
       .filter((c: any) => ["APPROVED", "PROCESSING", "SETTLED"].includes(c.status))
-      .reduce((acc: number, c: any) => acc + (c.approvedAmount || c.claimedAmount || 0), 0);
+      .reduce((acc: number, c: any) => acc + (c.approvedAmount || c.claimAmount || c.claimedAmount || 0), 0);
   }, [myClaims]);
 
   const totalSettled = useMemo(() => {
     return myClaims
       .filter((c: any) => c.status === "SETTLED")
-      .reduce((acc: number, c: any) => acc + (c.approvedAmount || c.claimedAmount || 0), 0);
+      .reduce((acc: number, c: any) => acc + (c.approvedAmount || c.claimAmount || c.claimedAmount || 0), 0);
   }, [myClaims]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,10 +86,10 @@ export default function ReimbursementPage() {
         workspaceId: effectiveWorkspaceId as any,
         employeeId: selfEmployee._id as any,
         categoryCode,
-        amount,
+        claimAmount: amount,
         expenseDate,
         businessPurpose,
-        receiptUrls: receiptUrl ? [receiptUrl] : [],
+        description: businessPurpose,
         submitNow: true,
       });
       setIsSubmitModalOpen(false);
@@ -290,7 +290,7 @@ export default function ReimbursementPage() {
                         <div className="text-[11px] text-muted-foreground mt-0.5">{claim.businessPurpose}</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-foreground">₹{(claim.claimedAmount / 100).toFixed(2)}</div>
+                        <div className="font-bold text-foreground">₹{((claim.claimAmount || claim.claimedAmount || 0) / 100).toFixed(2)}</div>
                         <div className="mt-1">{getStatusBadge(claim.status)}</div>
                       </div>
                     </div>
@@ -334,7 +334,7 @@ export default function ReimbursementPage() {
                         <td className="px-4 py-3 text-foreground">{claim.categoryName}</td>
                         <td className="px-4 py-3 text-foreground max-w-xs truncate">{claim.businessPurpose}</td>
                         <td className="px-4 py-3 text-right font-medium text-foreground">
-                          ₹{(claim.claimedAmount / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          ₹{((claim.claimAmount || claim.claimedAmount || 0) / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">
                           {claim.approvedAmount !== undefined ? `₹${(claim.approvedAmount / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "—"}
@@ -345,7 +345,10 @@ export default function ReimbursementPage() {
                             <button
                               onClick={async () => {
                                 if (confirm("Cancel this claim?")) {
-                                  await cancelClaim({ claimId: claim._id });
+                                  await cancelClaim({
+                                    workspaceId: effectiveWorkspaceId as any,
+                                    claimId: claim._id,
+                                  });
                                 }
                               }}
                               className="rounded border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400"

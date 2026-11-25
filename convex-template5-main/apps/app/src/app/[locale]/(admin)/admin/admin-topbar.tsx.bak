@@ -1,0 +1,304 @@
+"use client";
+
+import { cleanClientSessionStorage, performLogout } from "@/lib/logout";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { api } from "@v1/backend/convex/_generated/api";
+import { useQuery } from "convex/react";
+import {
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  KeyRound,
+  Lock,
+  LogOut,
+  Moon,
+  Search,
+  Server,
+  Settings,
+  Shield,
+  ShieldAlert,
+  Sparkles,
+  User,
+  Users,
+  Wrench,
+} from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { QuickLauncherModal } from "../../(dashboard)/_components/quick-launcher-modal";
+
+interface AdminTopbarProps {
+  activeView?: "welcome" | "dashboard";
+  onViewChange?: (view: "welcome" | "dashboard") => void;
+}
+
+export function AdminTopbar({
+  activeView = "welcome",
+  onViewChange,
+}: AdminTopbarProps) {
+  const [launcherOpen, setLauncherOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
+  const { signOut } = useAuthActions();
+
+  // Current User Query to check role
+  const user = useQuery(api.users.getUser);
+  const isAdmin = (user as any)?.role === "admin";
+
+  const handleLogout = async () => {
+    try {
+      await performLogout({
+        signOut,
+        timeoutMs: 3500,
+        redirectTo: "/login",
+      });
+    } catch {
+      cleanClientSessionStorage();
+      if (typeof window !== "undefined") {
+        window.location.replace("/login");
+      }
+    }
+  };
+
+  // Close dropdown on outside click or Escape key
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        settingsRef.current &&
+        !settingsRef.current.contains(event.target as Node)
+      ) {
+        setSettingsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSettingsOpen(false);
+      }
+    };
+
+    if (settingsOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [settingsOpen]);
+
+  return (
+    <>
+      <header className="relative flex h-[68px] w-full shrink-0 items-center justify-between bg-white px-6 z-30 select-none border-b border-[#E4E9F0]">
+        {/* Left Side: 9-Dot App Launcher + VICTOR CHASEX Logo */}
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setLauncherOpen((prev) => !prev)}
+            title="Apps"
+            aria-label="Apps"
+            className="flex h-9 w-9 items-center justify-center rounded-[8px] border border-[#CBD5E1] bg-white text-slate-700 hover:bg-slate-50 transition active:scale-95"
+          >
+            <svg
+              stroke="currentColor"
+              fill="currentColor"
+              strokeWidth="0"
+              viewBox="0 0 256 256"
+              aria-hidden="true"
+              focusable="false"
+              className="h-5 w-5 text-slate-600"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M76,60A16,16,0,1,1,60,44,16,16,0,0,1,76,60Zm52-16a16,16,0,1,0,16,16A16,16,0,0,0,128,44Zm68,32a16,16,0,1,0-16-16A16,16,0,0,0,196,76ZM60,112a16,16,0,1,0,16,16A16,16,0,0,0,60,112Zm68,0a16,16,0,1,0,16,16A16,16,0,0,0,128,112Zm68,0a16,16,0,1,0,16,16A16,16,0,0,0,196,112ZM60,180a16,16,0,1,0,16,16A16,16,0,0,0,60,180Zm68,0a16,16,0,1,0,16,16A16,16,0,0,0,128,180Zm68,0a16,16,0,1,0,16,16A16,16,0,0,0,196,180Z" />
+            </svg>
+          </button>
+
+          <Link href="/admin" className="flex items-center">
+            <img
+              src="/victor-chasex-logo.jpg"
+              alt="VICTOR CHASEX"
+              className="h-[28px] w-auto object-contain rounded"
+              style={{ aspectRatio: "661 / 211" }}
+            />
+          </Link>
+        </div>
+
+        {/* Right Side: Search Anything Pill, AI Assistant, Settings Dropdown & Logout */}
+        <div className="flex items-center gap-3">
+          {/* Global Search Bar */}
+          <button
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "k", ctrlKey: true }),
+              );
+            }}
+            className="flex items-center gap-3 rounded-full border border-[#CBD5E1] bg-white px-3.5 py-1.5 text-xs text-[#94A3B8] hover:border-slate-400 transition w-56 sm:w-64 justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <Search className="h-3.5 w-3.5 text-[#94A3B8]" />
+              <span className="text-[#94A3B8] text-[13px]">
+                Search Anything
+              </span>
+            </div>
+            <span className="text-[11px] text-[#94A3B8] font-normal">
+              Ctrl + K
+            </span>
+          </button>
+
+          {/* AI Assistant Icon */}
+          <button
+            type="button"
+            title="AI Assistant"
+            onClick={() => {
+              window.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "k", ctrlKey: true }),
+              );
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#CBD5E1] bg-white text-slate-700 hover:bg-slate-50 transition active:scale-95"
+          >
+            <Sparkles className="h-4 w-4 text-[#F59E0B]" />
+          </button>
+
+          {/* Settings Gear Dropdown Anchor */}
+          <div className="relative" ref={settingsRef}>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen((prev) => !prev)}
+              title="Settings"
+              aria-label="Settings"
+              aria-expanded={settingsOpen}
+              className={`flex h-9 items-center gap-1 rounded-full border px-2.5 transition active:scale-95 ${
+                settingsOpen
+                  ? "border-blue-600 bg-blue-50/60 text-blue-600 shadow-sm"
+                  : "border-[#CBD5E1] bg-white text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <Settings
+                className={`h-4 w-4 ${settingsOpen ? "text-blue-600" : "text-slate-600"}`}
+              />
+              {settingsOpen ? (
+                <ChevronUp className="h-3 w-3 text-blue-600" />
+              ) : (
+                <ChevronDown className="h-3 w-3 text-slate-400" />
+              )}
+            </button>
+
+            {/* Exact greytHR "Go to" Dropdown Surface */}
+            {settingsOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-slate-200/90 bg-white p-2 shadow-xl ring-1 ring-black/5 z-50 animate-in fade-in zoom-in-95 duration-150"
+              >
+                {/* Header Label: "Go to" */}
+                <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
+                  Go to
+                </div>
+
+                <div className="space-y-0.5">
+                  {/* 1. My Profile */}
+                  <Link
+                    href="/admin/settings/profile"
+                    onClick={() => setSettingsOpen(false)}
+                    role="menuitem"
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition"
+                  >
+                    <User className="h-4 w-4 text-slate-400" />
+                    <span>My Profile</span>
+                  </Link>
+
+                  {/* 2. Account Settings (Opens Plan page by default per Phase 16.2) */}
+                  <Link
+                    href="/admin/account-settings/plan"
+                    onClick={() => setSettingsOpen(false)}
+                    role="menuitem"
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition"
+                  >
+                    <KeyRound className="h-4 w-4 text-slate-400" />
+                    <span>Account Settings</span>
+                  </Link>
+
+                  {/* Horizontal Divider */}
+                  <div className="my-1 border-t border-slate-100" />
+
+                  {/* 3. User Administration (Restricted to Admins - Phase 17) */}
+                  <Link
+                    href="/admin/user-administration/roles"
+                    onClick={() => setSettingsOpen(false)}
+                    role="menuitem"
+                    className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Users className="h-4 w-4 text-slate-400" />
+                      <span>User Administration</span>
+                    </div>
+                    {!isAdmin && (
+                      <span title="Admin only">
+                        <Lock className="h-3 w-3 text-slate-400" />
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* 4. System Settings (Restricted to Admins - Phase 18) */}
+                  <Link
+                    href="/admin/system-settings/general/company-info"
+                    onClick={() => setSettingsOpen(false)}
+                    role="menuitem"
+                    className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Settings className="h-4 w-4 text-slate-400" />
+                      <span>System Settings</span>
+                    </div>
+                    {!isAdmin && (
+                      <span title="Admin only">
+                        <Lock className="h-3 w-3 text-slate-400" />
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* 5. Sys Admin Backroom (Restricted to Super/System Admins) */}
+                  <Link
+                    href="/admin/settings/backroom"
+                    onClick={() => setSettingsOpen(false)}
+                    role="menuitem"
+                    className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Server className="h-4 w-4 text-slate-400" />
+                      <span>Sys Admin Backroom</span>
+                    </div>
+                    {!isAdmin && (
+                      <span title="Privileged access only">
+                        <ShieldAlert className="h-3 w-3 text-amber-500" />
+                      </span>
+                    )}
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Logout / Power Control */}
+          <button
+            type="button"
+            onClick={handleLogout}
+            title="Sign Out"
+            aria-label="Sign Out"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#CBD5E1] bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition active:scale-95"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
+      </header>
+
+      {/* 9-Dot Quick Launcher Modal */}
+      <QuickLauncherModal
+        open={launcherOpen}
+        isOpen={launcherOpen}
+        onOpenChange={setLauncherOpen}
+        onClose={() => setLauncherOpen(false)}
+      />
+    </>
+  );
+}

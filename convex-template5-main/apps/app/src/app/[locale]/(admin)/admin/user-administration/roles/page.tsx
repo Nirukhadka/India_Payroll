@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@v1/backend/convex/_generated/api";
+import type { Id } from "@v1/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import {
   AlertCircle,
@@ -48,7 +49,7 @@ export default function UserRolesPage() {
     _id: Id<"userAdminRoles">;
     roleKey: string;
     name: string;
-    description: string;
+    description?: string;
     isSystem: boolean;
     permissions: PermissionMatrix;
   } | null>(null);
@@ -76,7 +77,7 @@ export default function UserRolesPage() {
     _id: Id<"userAdminRoles">;
     roleKey: string;
     name: string;
-    description: string;
+    description?: string;
     isSystem: boolean;
     permissions: PermissionMatrix;
   }) => {

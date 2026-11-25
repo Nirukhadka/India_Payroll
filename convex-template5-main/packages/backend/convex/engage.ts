@@ -537,6 +537,65 @@ export const addComment = mutation({
   },
 });
 
+export const editComment = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    commentId: v.id("comments"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new ConvexError("Not authenticated");
+    const m = await requireMember(ctx, userId, args.workspaceId);
+
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment || comment.workspaceId !== args.workspaceId) {
+      throw new ConvexError("Comment not found in this workspace");
+    }
+
+    // Only the author can edit their comment
+    if (comment.userId !== userId) {
+      throw new ConvexError("Forbidden: You can only edit your own comments");
+    }
+
+    if (!args.content.trim()) {
+      throw new ConvexError("Comment cannot be empty");
+    }
+
+    await ctx.db.patch(args.commentId, {
+      content: args.content.trim(),
+    });
+
+    return { success: true };
+  },
+});
+
+export const deleteComment = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    commentId: v.id("comments"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new ConvexError("Not authenticated");
+    const m = await requireMember(ctx, userId, args.workspaceId);
+
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment || comment.workspaceId !== args.workspaceId) {
+      throw new ConvexError("Comment not found in this workspace");
+    }
+
+    // Author or admin/owner can delete comments
+    const isAdmin = m.role === "admin" || m.role === "owner";
+    if (comment.userId !== userId && !isAdmin) {
+      throw new ConvexError("Forbidden: You do not have permission to delete this comment");
+    }
+
+    await ctx.db.delete(args.commentId);
+    return { success: true };
+  },
+});
+
 export const listReactions = query({
   args: {
     workspaceId: v.id("workspaces"),

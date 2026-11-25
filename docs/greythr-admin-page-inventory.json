@@ -1,0 +1,226 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "greytHR Admin Portal Page Inventory",
+  "metadata": {
+    "project": "IndiaPay Admin Portal Reconstruction",
+    "reference_origin": "https://victorchasex.greythr.com",
+    "cdp_target_id": "F9A51BC9318EED2E5198A7CB3401D0FB",
+    "observation_provider": "REA Chrome DevTools Protocol v2",
+    "generated_at": "2026-11-17T08:18:00Z",
+    "viewport_reference": {
+      "width": 1920,
+      "height": 912
+    }
+  },
+  "modules": [
+    {
+      "id": "admin_welcome",
+      "module_name": "Admin Welcome Dashboard",
+      "reference_url": "https://victorchasex.greythr.com/home/#welcome",
+      "indiapay_route": "/admin#welcome",
+      "access_status": "accessible_observed",
+      "evidence_id": "ev_5b93ec954ca82ea1c9abda6a9db9b3d359bbaa66346c87dd3095659f0d2ef2e0",
+      "screenshot_artifact": "greythr-reference.png",
+      "dom_node_count": 1034,
+      "accessibility_node_count": 444,
+      "ui_components": [
+        "Full-width application header with 9-dot App Launcher, brand logo, Search Anything (Ctrl+K), AI trigger, settings, logout",
+        "Centered pill switcher: Welcome vs Dashboard",
+        "Hero greeting: 'Good Afternoon, Let's do great things together. 🚀 🌟' with cityscape vector illustration",
+        "My Favourites: Add button (+) and 4 shortcut cards (Add Employee, Process Payroll, Update Payroll Data, Salary statement for a month)",
+        "My Tasks: Split container with 2 counters ('0 Things to review', '3 Things to monitor'), green accent line, monitor action, and agile board vector graphic",
+        "Help Links: Row of action badges (Community, Statutory Compliances, Knowledge Centre, Resource Centre, How-to Videos, Academy, Audio Guides)",
+        "Latest Updates: Lavender right sidebar with 4 announcements"
+      ],
+      "workflow_capabilities": [
+        "Quick navigation to core payroll and HR master modules",
+        "At-a-glance monitoring of pending employee workflows"
+      ]
+    },
+    {
+      "id": "operational_dashboard",
+      "module_name": "Operational Dashboard & KPIs",
+      "reference_url": "https://victorchasex.greythr.com/home/#home-page-dashboard-panel",
+      "indiapay_route": "/admin#home-page-dashboard-panel",
+      "access_status": "accessible_observed",
+      "ui_components": [
+        "Active Staff KPI Card",
+        "Today's Swipes KPI Card",
+        "Pending Leaves Review Counter",
+        "Payroll Status & Net Value Summary",
+        "Indian Statutory Deadlines Cards (EPFO ECR, TDS Challan 281)"
+      ],
+      "workflow_capabilities": [
+        "Executive operational overview",
+        "Statutory filing timeline alerts"
+      ]
+    },
+    {
+      "id": "core_hr_employee_management",
+      "module_name": "Employee Management & Overview",
+      "reference_url": "https://victorchasex.greythr.com/ngapp/employee/main/overview",
+      "indiapay_route": "/employees",
+      "access_status": "discovered_route",
+      "ui_components": [
+        "Employee Directory Data Table",
+        "Search by Name/Employee Code",
+        "Department & Designation Filters",
+        "Employee Status Badges (Active, Suspended, Resigned)",
+        "Quick Action Drawer / Profile Viewer"
+      ],
+      "workflow_capabilities": [
+        "Query employee master database",
+        "Filter by department and employment type",
+        "Export employee muster"
+      ]
+    },
+    {
+      "id": "employee_onboarding",
+      "module_name": "Add / Onboard Employee",
+      "reference_url": "https://victorchasex.greythr.com/ngapp/adminBackRoom/minor/updateEmployeeInfo",
+      "indiapay_route": "/employees?action=add",
+      "access_status": "discovered_route",
+      "ui_components": [
+        "Multi-step New Hire Form (Basic Details, Statutory PF/ESI/PAN/UAN, Bank Information, Compensation CTC)",
+        "Document Upload Component",
+        "Validation Error Indicators"
+      ],
+      "workflow_capabilities": [
+        "Create employee profile with Indian statutory identifiers",
+        "Link bank account IFSC & account number"
+      ]
+    },
+    {
+      "id": "payroll_management",
+      "module_name": "Payroll Management & Overview",
+      "reference_url": "https://victorchasex.greythr.com/ngapp/payroll/main/overview/",
+      "indiapay_route": "/payroll",
+      "access_status": "discovered_route",
+      "ui_components": [
+        "Monthly Salary Processing Run Wizard",
+        "Attendance Cutoff & LOP Integration Summary",
+        "Earnings vs Deductions Breakdown Chart",
+        "Statutory Calculation Summary (PF, ESI, PT, TDS)",
+        "Run Finalization & Lock Banner"
+      ],
+      "workflow_capabilities": [
+        "Execute automated payroll calculation",
+        "Review gross-to-net statements",
+        "Approve and generate payslips"
+      ]
+    },
+    {
+      "id": "salary_structures",
+      "module_name": "Salary Structures & CTC Components",
+      "reference_url": "https://victorchasex.greythr.com/ngapp/payroll/main/overview/",
+      "indiapay_route": "/salaries",
+      "access_status": "discovered_route",
+      "ui_components": [
+        "CTC Breakdown Formula Builder (Basic, HRA, Special Allowance, DA)",
+        "Section 115BAC New vs Old Regime Estimator",
+        "State Profession Tax Configuration Table"
+      ],
+      "workflow_capabilities": [
+        "Define wage formulas and PF ceiling thresholds",
+        "Update salary templates across departments"
+      ]
+    },
+    {
+      "id": "leave_management",
+      "module_name": "Leave Administration & Overview",
+      "reference_url": "https://victorchasex.greythr.com/ngapp/leave/main/overview",
+      "indiapay_route": "/attendance?tab=leaves",
+      "access_status": "discovered_route",
+      "ui_components": [
+        "Pending Leave Approvals Queue",
+        "Leave Balances Ledger (Paid Leave, Sick Leave, Casual Leave)",
+        "Employee Leave Calendar & Absence Heatmap",
+        "Approve / Reject Action Modal with Remarks"
+      ],
+      "workflow_capabilities": [
+        "Multi-tier approval workflows",
+        "Balance credit, lapse and encashment processing"
+      ]
+    },
+    {
+      "id": "workflow_engine",
+      "module_name": "Workflow Approvals & Delegations",
+      "reference_url": "https://victorchasex.greythr.com/nx/workflow/module/leave",
+      "indiapay_route": "/delegates",
+      "access_status": "discovered_route",
+      "ui_components": [
+        "Workflow Delegate Assignment Table",
+        "Escalation Timelines & Rule Builder",
+        "Approval Audit History"
+      ],
+      "workflow_capabilities": [
+        "Delegate managerial approval authorities",
+        "Review end-to-end task audit trail"
+      ]
+    },
+    {
+      "id": "reports_and_analytics",
+      "module_name": "Reports Gallery & Statutory Returns",
+      "reference_url": "https://victorchasex.greythr.com/ngapp/reports/reports/reports-gallery",
+      "indiapay_route": "/reports",
+      "access_status": "discovered_route",
+      "ui_components": [
+        "Categorized Report Gallery (Statutory, Payroll Registers, Headcount)",
+        "Date Range & Filter Criteria Form",
+        "Export Buttons (Excel, CSV, Text ECR, PDF)"
+      ],
+      "workflow_capabilities": [
+        "Generate EPFO ECR text format",
+        "Generate ESIC monthly upload excel",
+        "Generate Form 5A PT Karnataka statement"
+      ]
+    },
+    {
+      "id": "user_administration_roles",
+      "module_name": "User Roles & Permissions",
+      "reference_url": "https://victorchasex.greythr.com/ngapp/userAdministration/user/roles",
+      "indiapay_route": "/settings",
+      "access_status": "discovered_route",
+      "ui_components": [
+        "Role Definition Matrix (Admin, HR Manager, Payroll Officer, Member)",
+        "Granular Permission Checkboxes per Module",
+        "User Assignment Table"
+      ],
+      "workflow_capabilities": [
+        "Assign and enforce RBAC capabilities",
+        "Audit permission changes"
+      ]
+    },
+    {
+      "id": "organization_settings",
+      "module_name": "Company Information & General Settings",
+      "reference_url": "https://victorchasex.greythr.com/ngapp/settings/general/company-info",
+      "indiapay_route": "/settings",
+      "access_status": "discovered_route",
+      "ui_components": [
+        "Company Legal Entity Profile",
+        "Statutory Registration Numbers (CIN, GSTIN, TAN, EPF Code, ESI Code)",
+        "Work Locations & Holiday Calendar Linkage"
+      ],
+      "workflow_capabilities": [
+        "Manage organization corporate identity",
+        "Configure branch locations across Indian states"
+      ]
+    },
+    {
+      "id": "subscription_plan",
+      "module_name": "Account Plan & Subscription",
+      "reference_url": "https://victorchasex.greythr.com/ngapp/accountInfo/plan",
+      "indiapay_route": "/platform",
+      "access_status": "discovered_route",
+      "ui_components": [
+        "Current Active Tier (Enterprise)",
+        "Active Employee License Quotas",
+        "Billing Invoices & Plan Renewal"
+      ],
+      "workflow_capabilities": [
+        "Monitor enterprise license utilization"
+      ]
+    }
+  ]
+}

@@ -12,7 +12,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { useState } from "react";
-import { AdminTopbar } from "../admin-topbar";
+import { AdminTopbar } from "../../admin-topbar";
 
 export default function AccountSettingsPage() {
   const user = useQuery(api.users.getUser);

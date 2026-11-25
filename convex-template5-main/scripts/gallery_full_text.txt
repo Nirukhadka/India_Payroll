@@ -1,0 +1,230 @@
+Hide Help
+
+The Reports Gallery page helps you to view and generate reports under various categories. You can download the reports in PDF, XLS, or Doc formats. All the reports are completely customizable.
+
+The page also lets you mark the report as a favorite you frequently generate. The Favorites option saves you time by giving you access to your favorite reports separately. 
+
+Explore the Reports Gallery page with Help-Doc and FAQs.
+
+All Reports  Favorites
+Karnataka ...
+Payroll Payout
+Payroll JV - Reimbursements 
+Payment Register 
+Payroll Transfer Reconciliation (Payment Type-Wise) 
+Bank Transfer Advise 
+Bank Transfer Statement 
+Payroll JV 
+Other Payroll Transfer Statements 
+Payroll Transfer Summaries 
+Salary Bill Register 
+Salary Register 
+Salary Register (Cash) 
+Salary Statement - Monthly 
+Payroll Control
+Duplicate Report 
+Hold-Release Salary Report 
+Employee Reconciliation Report 
+Negative Cost Report 
+Payroll Reconciliation-Consolidated 
+Payroll Reconciliation 
+ESI - EMPLOYEES' STATE INSURANCE FUND
+ESI Form 1 Declaration Form 
+Form 11 Accident Book 
+ESI Arrear Report 
+ESI - Challan Report 
+ESI Monthly Report Upload Format 
+ESI - Monthly Statement 
+ESI - Monthly Summary Report 
+ESI - Form 6 - Half Yearly Statement 
+ESI - Form 7 - Half Yearly Statement 
+PF - Provident Fund
+EPF Form 11 - Declaration Form 
+EPF Form 2 
+PF - AADHAAR DETAILS OF MEMBERS (ANNEXURE - I) 
+PF - Combined Challan Report 
+PF - Combined Challan Report V1 
+PF - Form 10C - Employee Pension Scheme 
+PF - Form 10 - Consolidated statement of members leaving PF 
+PF - Form 12A - PF Monthly Statement of Consolidation paid 
+PF - Form 12A - PF Monthly Statement of Consolidation paid V1 
+PF - Form 19 - Employee PF Claim Form 
+Form 19 - PF Composite Claim form ( Aadhar ) 
+PF - Form 3A 
+PF - Form 5 - Consolidated statement of members joining PF 
+PF - Form 6A - Consolidated Statement For Contribution Card 
+PF - Form R1 - Monthly Return for Employees 
+PF - Form R1 - Monthly Return for Employees V1 
+NPS Contribution Report 
+PF Wage Ceiling Increase - Analysis Report 
+PF And Pension Contribution 
+PF Arrear Report 
+PF - Monthly Statement 
+PF - Monthly StatementV1 
+PF - Summary Report 
+PF - Summary Report V1 
+PF - ECR Format 
+Statement of International Workers (IW) - 1 with cover letter 
+PT - Profession Tax
+Profession Tax Monthly Statement (Any State) 
+FORM 5 - Profession Tax Annual Return - Karnataka 
+FORM 5A - Profession Tax Monthly Statement - Karnataka 
+Workforce Attrition Reports
+Attrition Report 
+Income Tax
+Monthly TDS Challan 
+Income Tax Statement - Consolidated 
+Income Tax Worksheet 
+Annual Tax Report 
+Form 12BB - IT Savings 
+Income Tax - Form 16A 
+Income Tax - Monthly Statement 
+Income Tax Statement 
+IT Landlord Details 
+IT Savings Chapter6 Report 
+IT Savings Other Reports 
+IT Savings Previous Employement Report 
+IT Savings Reports 
+Monthly TDS challan report - TDS Bank Payment File 
+Proof Of Investment Declaration 
+Income Tax Liability Report 
+Reimbursement
+Reimbursement Balance Report 
+Reimbursement Claim Report 
+Detailed Reimbursement Summary Report 
+Reimbursement Overall Entitlement Summary Report 
+Reimbursement Summary Report 
+Reimbursement Transaction Report 
+Reimbursement YTD Report 
+Loan
+Loan Balance Report 
+Loan Summary Report 
+Loan Transaction Report 
+Loan Details Report 
+Claims
+Claim bank transfer statement 
+MIS Reports
+LOP Reversal Report 
+Arrear Report 
+Compensation Item Statement - Monthly 
+Compensation Item Statement - Consolidated 
+Reimbursement Duplicate bills Report 
+Employee Bio data 
+Employee Filter Configuration Report 
+Employee Master information Report 
+Excel Import Log Report 
+Exit Interview Checklist 
+FORM 12B 
+Form 25 - Gratuity Nomination Form 
+Salary Input History 
+Implementation Verification Report 
+Monthly Change Tracking Report for Employee Info Updates 
+Overrides Report (EmployeeWise) 
+Overrides Report (ItemWise) 
+Payroll Anomalies Report 
+ReSettlement Report 
+Reversal transaction Report 
+Salary Revision History 
+Salary Structure Report 
+Settlement Report 
+User Activity Log Report 
+YTD Statement 
+YTD Statement Consolidated Report 
+YTD Summary Report 
+CTC Breakup Report 
+IT declaration revoked employee list 
+Bonus Statement 
+LIC Statement 
+Nomination Details Report 
+Salary Payout Reconciliation Report 
+Salary Summary Report 
+Leave
+Leave Availed Report 
+Leave Backdated Report 
+Leave Balance As On A Day 
+Day Wise Leave Transaction Report 
+Leave Encashment Report 
+Negative Leave Balance 
+Leave Summary Report 
+Leave Transaction Report 
+Year Wise Summary Report 
+Help Desk
+Response Time Report (Help Desk Ticket) 
+Help Desk Tickets Report 
+Labour Welfare Fund Act - Karnataka
+Form B - Register Of Fines And Unpaid Accumulations - Labour Welfare Fund Act - Karnataka 
+FORM D - Statement of Employer's and Employee's Contribution - Labour Welfare Fund Act - Karnataka 
+Minimum Wages Rules - Karnataka
+Form II - Register of deductions for absence from duty or for damage or loss caused to the employee by the neglect or default of the employed persons - Minimum Wages Rules - Karnataka 
+Form IV - Overtime Time Register - Minimum Wages Rules - Karnataka 
+Form I - Register of Fines - Minimum Wages Rules - Karnataka 
+Form VII - Muster Roll - Minimum Wages Rules - Karnataka 
+Form VI - Wage slip - Minimum Wages Rules - Karnataka 
+Form V - Register of wages - Minimum Wages Rules - Karnataka 
+Form III - Annual Return - Minimum Wages Rules - Karnataka 
+Factories Act - Karnataka
+Form 9 - Overtime Register - Factories Act - Karnataka 
+Form 20 - Combined annual return - Factories Act - Karnataka 
+Form 11 - Register of Adult workers - Factories Act - Karnataka 
+Form 14 - Register of leave with wages - Factories Act - Karnataka 
+Form 15 - Leave book - Factories Act - Karnataka 
+Form 21 - Half Yearly Return - Factories Act - Karnataka 
+Form 22 - Muster Roll cum Wage register - Factories Act - Karnataka 
+Maternity Benefit Act - Central
+Form A - Muster Roll - ( NIL Register ) - Maternity Benefit Act - Central 
+CLRA Act & Rules - Central
+Form XIII - Register of Workmen Employed by Contractor - CLRA Act & Rules - Central 
+Form XII - Register of contractors - CLRA Act & Rules - Central 
+Form XIV - Employment Card - CLRA Act & Rules - Central 
+Form XIX - Wages Slip - CLRA Rules - Central 
+Form XVII - Register of Wages - CLRA Act & Rules - Central 
+Form XVI - Muster Roll - CLRA Act & Rules - Central 
+Form XV - Service Certificate - CLRA Act & Rules - Central 
+Form XX - Register of Deductions for Damage or Loss - CLRA Act & Rules - Central 
+Form XXI - Register of Fines - CLRA Act & Rules - Central 
+Form XXII - Register of Advances - CLRA Act & Rules - Central 
+Form XXIII - Register of Overtime - CLRA Act & Rules - Central 
+Payment of Bonus Act - Central
+Form C - Bonus Paid To Employees - Payment of Bonus Act - Central 
+Form D - Annual Return bonus paid to employees - Payment of Bonus Act - Central 
+Equal Remuneration Act - Central
+Form D - Register To Be Maintained By The Employer - Equal Remuneration Act - Central 
+Workmen's Compensation Act
+Form 35 - Form of Notice Book - Workmen's Compensation Act - Central 
+Ease of Compliance - Central
+Form A - Employee Register - Ease of Compliance - Central 
+Form B - Wage Register - Ease of Compliance - Central 
+Form C - Register of Loan/Recoveries - Ease of Compliance - Central 
+Form D - Attendance Register - Ease of Compliance - Central 
+Shops & Est Act - Karnataka
+Form U - Combined annual return - Shops & Est. Act - Karnataka 
+Form Q - Appointment Order - Shops & Est. Act - Karnataka 
+Form T - Combined Muster Roll cum Register of Wages - Shops & Est. Act - Karnataka 
+Form R - Request for exemption for employing women in night shift - Shops & Est. Act - Karnataka 
+Form F - Register of Leave with wages - Shops & Est. Act - Karnataka 
+Form H - Leave with wages book - Shops & Est. Act - Karnataka 
+Tamil Nadu Labour Welfare Fund Act, 1972
+Form A Statement of Contributions to Labour Welfare Fund Tamil Nadu 
+Labour Reports
+Form 10 - Overtime muster-roll for persons on exempted work month ending(Himachal Pradesh) 
+Form 10 - Overtime muster-roll for persons on exempted work month ending (Uttar Pradesh) 
+Form 16 - Register of Leave with Wages - Rajasthan 
+Form 25 - Muster roll and register of compensatory Holiday(Tamilnadu) 
+Form 28 - Muster Roll - Gujarat 
+Form V - Wages Slip - Haryana 
+Form No XXIX Register of Advances Deductions for Damages or Loss and Fines 
+Form I Register of Wages Overtime Fine and Deduction for damage and Loss 
+Form XXVIII - Wage slip 
+Form X Identity Card 
+Form VI Contract Labour (Regulation & Abolition) Central Rules 
+Form XXVI Register Of Employment Of Contract Labour 
+Form II - Muster Roll Cum Wage Register 
+Form VI - Wage Slip - Karnataka Minimum Wages Rules 
+Payment of Gratuity Act - Central
+Form F - Nomination - Payment of Gratuity Act - Central 
+HR Reports
+Anniversary Report 
+Employee Family Details 
+Transitionwise Head Count Report 
+User Access Rights Report 
+

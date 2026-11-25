@@ -42,7 +42,7 @@ export default function RootLayout({
           <ExtensionErrorGuard />
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            defaultTheme="light"
             enableSystem
             disableTransitionOnChange
           >

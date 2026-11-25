@@ -31,6 +31,9 @@ export async function requireRole(
 ) {
   const m = await membership(ctx, userId, workspaceId);
   if (!m) throw new ConvexError("Forbidden");
+  if (m.status === "suspended") {
+    throw new ConvexError("Forbidden: Member is suspended in this workspace");
+  }
   const effectiveRole = m.role === "owner" ? "admin" : m.role;
   if (!roles.includes(effectiveRole as Role) && !roles.includes(m.role as any)) {
     throw new ConvexError("Forbidden");
@@ -111,7 +114,13 @@ export const myWorkspaces = query({
     const out = [];
     for (const m of mems) {
       const ws = await ctx.db.get(m.workspaceId);
-      if (ws) out.push({ ...ws, role: m.role });
+      if (ws) {
+        out.push({
+          ...ws,
+          role: m.role,
+          status: m.status ?? "active",
+        });
+      }
     }
     return out;
   },

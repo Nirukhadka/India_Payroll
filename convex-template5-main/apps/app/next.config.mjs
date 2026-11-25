@@ -16,14 +16,17 @@ const nextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
         ],
       },
     ];
   },
 };
 
-export default (process.env.NODE_ENV === "production" || process.env.CI)
+export default process.env.NODE_ENV === "production" || process.env.CI
   ? withSentryConfig(nextConfig, {
       silent: !process.env.CI,
       telemetry: false,

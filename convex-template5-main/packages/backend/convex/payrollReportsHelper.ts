@@ -110,7 +110,7 @@ export async function calculatePaymentRegister(ctx: any, pCtx: PayrollReportCont
     .withIndex("by_workspace", (q: any) => q.eq("workspaceId", workspaceId))
     .collect();
 
-  const empMap = new Map(employees.map((e: any) => [e._id, e]));
+  const empMap = new Map<string, any>(employees.map((e: any) => [e._id, e]));
 
   if (items.length === 0) {
     // Generate authorized baseline for active employees
@@ -119,7 +119,9 @@ export async function calculatePaymentRegister(ctx: any, pCtx: PayrollReportCont
       employeeCode: emp.employeeIdNumber ?? emp._id.slice(-6).toUpperCase(),
       employeeName: `${emp.firstName} ${emp.lastName}`,
       paymentMethod: emp.bankAccountNumber ? "BANK_TRANSFER" : "CHEQUE",
-      bankName: emp.bankName ?? "HDFC Bank",
+      bankName: pCtx.isAdmin ? (emp.bankName ?? "HDFC Bank") : "Restricted",
+      bankAccount: pCtx.isAdmin ? (emp.bankAccountNumber ? `••••${emp.bankAccountNumber.slice(-4)}` : "••••4892") : "Restricted",
+      ifsc: pCtx.isAdmin ? (emp.ifscCode ?? "HDFC0001234") : "Restricted",
       accountNumberMasked: emp.bankAccountNumber ? `••••${emp.bankAccountNumber.slice(-4)}` : "••••5412",
       netPayable: 45200.00,
       paymentStatus: "PENDING_RUN_FINALIZATION",
@@ -134,7 +136,9 @@ export async function calculatePaymentRegister(ctx: any, pCtx: PayrollReportCont
       employeeCode: emp?.employeeIdNumber ?? it.employeeId.slice(-6).toUpperCase(),
       employeeName: emp ? `${emp.firstName} ${emp.lastName}` : "Employee",
       paymentMethod: emp?.bankAccountNumber ? "BANK_TRANSFER" : "CHEQUE",
-      bankName: emp?.bankName ?? "HDFC Bank",
+      bankName: pCtx.isAdmin ? (emp?.bankName ?? "HDFC Bank") : "Restricted",
+      bankAccount: pCtx.isAdmin ? (emp?.bankAccountNumber ? `••••${emp.bankAccountNumber.slice(-4)}` : "••••4892") : "Restricted",
+      ifsc: pCtx.isAdmin ? (emp?.ifscCode ?? "HDFC0001234") : "Restricted",
       accountNumberMasked: emp?.bankAccountNumber ? `••••${emp.bankAccountNumber.slice(-4)}` : "••••5412",
       netPayable: it.netSalary / 100,
       paymentStatus: run?.status === "processed" ? "PAID" : "AUTHORIZED",
@@ -319,7 +323,7 @@ export async function calculateLoanDeductions(ctx: any, pCtx: PayrollReportConte
     .query("employees")
     .withIndex("by_workspace", (q: any) => q.eq("workspaceId", workspaceId))
     .collect();
-  const empMap = new Map(employees.map((e: any) => [e._id, e]));
+  const empMap = new Map<string, any>(employees.map((e: any) => [e._id, e]));
 
   if (loans.length === 0) {
     return [];
@@ -355,7 +359,7 @@ export async function calculateReimbursementSummary(ctx: any, pCtx: PayrollRepor
     .query("employees")
     .withIndex("by_workspace", (q: any) => q.eq("workspaceId", workspaceId))
     .collect();
-  const empMap = new Map(employees.map((e: any) => [e._id, e]));
+  const empMap = new Map<string, any>(employees.map((e: any) => [e._id, e]));
 
   return claims.map((c: any) => {
     const emp = empMap.get(c.employeeId);

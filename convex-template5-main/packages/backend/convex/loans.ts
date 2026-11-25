@@ -41,7 +41,20 @@ export const listWorkspaceLoans = query({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new ConvexError("Not authenticated");
-    await requireMember(ctx, userId, args.workspaceId);
+    const m = await requireMember(ctx, userId, args.workspaceId);
+
+    // If regular member, restrict strictly to their own employee record
+    let targetEmployeeId = args.employeeId;
+    if (m.role === "member") {
+      const me = await ctx.db
+        .query("employees")
+        .withIndex("by_workspace_user", (q) =>
+          q.eq("workspaceId", args.workspaceId).eq("userId", userId),
+        )
+        .first();
+      if (!me) return [];
+      targetEmployeeId = me._id;
+    }
 
     let loans = await ctx.db
       .query("loans")
@@ -49,8 +62,8 @@ export const listWorkspaceLoans = query({
       .order("desc")
       .collect();
 
-    if (args.employeeId) {
-      loans = loans.filter((l) => l.employeeId === args.employeeId);
+    if (targetEmployeeId) {
+      loans = loans.filter((l) => l.employeeId === targetEmployeeId);
     }
     if (args.status) {
       loans = loans.filter((l) => l.status === args.status);
@@ -70,6 +83,127 @@ export const listWorkspaceLoans = query({
     );
 
     return enrichedLoans;
+  },
+});
+
+/**
+ * 2b. Get My Loans (Employee ESS)
+ */
+export const getMyLoans = query({
+  args: {
+    workspaceId: v.id("workspaces"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new ConvexError("Not authenticated");
+    await requireMember(ctx, userId, args.workspaceId);
+
+    const employee = await ctx.db
+      .query("employees")
+      .withIndex("by_workspace_user", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", userId),
+      )
+      .first();
+
+    if (!employee) return [];
+
+    const loans = await ctx.db
+      .query("loans")
+      .withIndex("by_workspace_employee", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("employeeId", employee._id),
+      )
+      .order("desc")
+      .collect();
+
+    return loans;
+  },
+});
+
+/**
+ * 2c. Apply for Loan or Salary Advance (Employee ESS)
+ */
+export const applyForLoan = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    loanType: v.string(), // "SALARY_ADVANCE", "PERSONAL", "EMERGENCY"
+    purpose: v.string(),
+    principalAmount: v.number(),
+    tenureMonths: v.number(),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new ConvexError("Not authenticated");
+    await requireMember(ctx, userId, args.workspaceId);
+
+    const employee = await ctx.db
+      .query("employees")
+      .withIndex("by_workspace_user", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", userId),
+      )
+      .first();
+
+    if (!employee) {
+      throw new ConvexError("No employee profile found linked to your account");
+    }
+
+    if (args.principalAmount <= 0) {
+      throw new ConvexError("Principal amount must be greater than zero");
+    }
+    if (args.tenureMonths <= 0 || !Number.isInteger(args.tenureMonths)) {
+      throw new ConvexError("Tenure must be a positive integer");
+    }
+    if (!args.purpose || !args.purpose.trim()) {
+      throw new ConvexError("Purpose of loan or advance is required");
+    }
+
+    // Advances are typically interest-free (0%) or nominal
+    const interestRatePercent = 0;
+    const now = Date.now();
+    const currentMonth = new Date().toISOString().slice(0, 7);
+
+    const emiResult = calculateEmiAndSchedule(
+      args.principalAmount,
+      interestRatePercent,
+      args.tenureMonths,
+      currentMonth,
+    );
+
+    const lastInstallment = emiResult.schedule[emiResult.schedule.length - 1];
+    const expectedCompletionDate = lastInstallment
+      ? lastInstallment.repaymentMonth
+      : currentMonth;
+
+    const loanId = await ctx.db.insert("loans", {
+      workspaceId: args.workspaceId,
+      employeeId: employee._id,
+      loanType: args.loanType,
+      purpose: args.purpose.trim(),
+      principalAmount: args.principalAmount,
+      interestRatePercent,
+      tenureMonths: args.tenureMonths,
+      monthlyEmiAmount: emiResult.monthlyEmiAmount,
+      startDate: currentMonth,
+      expectedCompletionDate,
+      approvalStatus: "PENDING",
+      disbursementStatus: "PENDING",
+      status: "PENDING",
+      outstandingPrincipal: args.principalAmount,
+      totalRepaid: 0,
+      notes: args.notes?.trim() || undefined,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await audit(ctx, args.workspaceId, userId, "loan.applied", {
+      loanId,
+      employeeId: employee._id,
+      principalAmount: args.principalAmount,
+      tenureMonths: args.tenureMonths,
+      monthlyEmiAmount: emiResult.monthlyEmiAmount,
+    });
+
+    return loanId;
   },
 });
 

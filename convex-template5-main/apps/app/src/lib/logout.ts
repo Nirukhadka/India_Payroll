@@ -49,6 +49,8 @@ export function cleanClientSessionStorage(): void {
   try {
     // 1. Clear workspace selection
     window.localStorage.removeItem("ws");
+    document.cookie = "ws=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "indiapay_active_ws=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
     // 2. Clear known Convex Auth tokens
     window.localStorage.removeItem("__convexAuthJWT");

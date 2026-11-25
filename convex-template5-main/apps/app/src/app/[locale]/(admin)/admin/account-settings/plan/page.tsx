@@ -59,7 +59,7 @@ const PLANS = [
       "Everything in Growth, plus:",
       "Dedicated CSM & Implementation Engineer",
       "Custom REST API & Webhooks Access",
-      "Unite Marketplace 27+ App Integrations",
+      "Advanced Enterprise App Integrations",
       "Custom Statutory Policy Rules Engine",
       "Multi-Entity Global Payroll Consolidation",
       "24/7 Phone & Critical Escalation Support",

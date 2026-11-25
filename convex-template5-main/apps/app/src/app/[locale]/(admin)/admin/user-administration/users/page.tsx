@@ -42,7 +42,7 @@ export default function UserListingPage() {
   } | null>(null);
 
   // Safe query invocation with resilient fallback when remote function is not deployed
-  let remoteUsers = undefined;
+  let remoteUsers: any = undefined;
   try {
     remoteUsers = useQuery((api as any)?.userAdministration?.listUsersWithRoles ? (api as any).userAdministration.listUsersWithRoles : "userAdministration:listUsersWithRoles", {
       search: searchTerm || undefined,
@@ -52,19 +52,19 @@ export default function UserListingPage() {
   } catch (e) {
     remoteUsers = undefined;
   }
-  const users = remoteUsers !== undefined ? remoteUsers : [
+  const users: any[] = remoteUsers !== undefined ? remoteUsers : [
     { _id: "usr-1", name: "System Administrator", email: "admin@victorchasex.com", role: "Super Admin", status: "ACTIVE", lastLogin: "Just now", avatarUrl: "" },
     { _id: "usr-2", name: "HR Manager", email: "hrmanager@victorchasex.com", role: "HR Admin", status: "ACTIVE", lastLogin: "2 hours ago", avatarUrl: "" },
     { _id: "usr-3", name: "Payroll Specialist", email: "payroll@victorchasex.com", role: "Payroll Admin", status: "ACTIVE", lastLogin: "Yesterday", avatarUrl: "" }
   ];
 
-  let remoteRoles = undefined;
+  let remoteRoles: any = undefined;
   try {
     remoteRoles = useQuery((api as any)?.userAdministration?.getRoles ? (api as any).userAdministration.getRoles : "userAdministration:getRoles");
   } catch (e) {
     remoteRoles = undefined;
   }
-  const roles = remoteRoles !== undefined ? remoteRoles : [
+  const roles: any[] = remoteRoles !== undefined ? remoteRoles : [
     { _id: "r-1", name: "Super Admin", description: "Full platform privileges", userCount: 1 },
     { _id: "r-2", name: "HR Admin", description: "Employee and leave management", userCount: 4 },
     { _id: "r-3", name: "Payroll Admin", description: "Salary and statutory processing", userCount: 2 }

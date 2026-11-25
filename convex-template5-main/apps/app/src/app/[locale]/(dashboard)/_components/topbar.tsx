@@ -227,116 +227,101 @@ export function Topbar() {
     );
   }
 
-  // Fallback for regular Employee Dashboard view
+  // Regular Employee Dashboard view (ESS) — Nine-dot launcher is strictly omitted per specification
   return (
-    <>
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-100 bg-[#F8FAFC] px-4 sm:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        {/* Left Side: 9-Dot greytHR App Launcher + Page Title with greytHR Folded Ribbon Icon */}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setLauncherOpen((prev) => !prev)}
-            title="Apps"
-            aria-label="Apps"
-            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-slate-200/70 dark:hover:bg-zinc-800 transition active:scale-95 text-[#5A6A7C] hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
-          >
-            <GreytHRNineDotIcon className="h-5 w-5" />
-          </button>
-
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-6 w-6 items-center justify-center text-blue-500">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 fill-blue-400/80 stroke-blue-500"
-              >
-                <path
-                  d="M4 4 L14 4 L18 8 L18 20 L4 20 Z"
-                  fill="currentColor"
-                  fillOpacity="0.3"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M14 4 L14 8 L18 8"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <h1 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
-              {title}
-            </h1>
-          </div>
-        </div>
-
-        {/* Right Side: Quick Links Dropdown, Notification Bell, and Power Button */}
-        <div className="flex items-center gap-4 sm:gap-6">
-          {/* Quick Links Menu */}
-          <div className="relative">
-            <button type="button"
-              onClick={() => setQuickLinksOpen(!quickLinksOpen)}
-              className="flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white transition"
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-100 bg-[#F8FAFC] px-4 sm:px-6 dark:border-zinc-800 dark:bg-zinc-950">
+      {/* Left Side: Page Title with greytHR Folded Ribbon Icon (Nine-dot launcher removed from ESS) */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-6 w-6 items-center justify-center text-blue-500">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 fill-blue-400/80 stroke-blue-500"
             >
-              <span>Quick Links</span>
-              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-            </button>
-
-            {quickLinksOpen && (
-              <div
-                className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white py-1.5 shadow-lg dark:border-zinc-800 dark:bg-zinc-900 z-50"
-                onMouseLeave={() => setQuickLinksOpen(false)}
-              >
-                <Link
-                  href="/salary"
-                  onClick={() => setQuickLinksOpen(false)}
-                  className="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  Payslip &amp; Salary
-                </Link>
-                <Link
-                  href="/leave/apply"
-                  onClick={() => setQuickLinksOpen(false)}
-                  className="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  Apply Leave
-                </Link>
-                <Link
-                  href="/attendance"
-                  onClick={() => setQuickLinksOpen(false)}
-                  className="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  Attendance Swipes
-                </Link>
-                <Link
-                  href="/documents"
-                  onClick={() => setQuickLinksOpen(false)}
-                  className="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  Document Center
-                </Link>
-              </div>
-            )}
+              <path
+                d="M4 4 L14 4 L18 8 L18 20 L4 20 Z"
+                fill="currentColor"
+                fillOpacity="0.3"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M14 4 L14 8 L18 8"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
-
-          {/* Notifications Bell */}
-          <NotificationsBell />
-
-          {/* Power / Logout Control */}
-          <button type="button"
-            onClick={handleLogout}
-            title="Sign out"
-            className="text-slate-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition"
-          >
-            <Power className="h-4 w-4" />
-          </button>
+          <h1 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
+            {title}
+          </h1>
         </div>
-      </header>
+      </div>
 
-      {/* greytHR Quick Apps Launcher Popover / Modal */}
-      <QuickLauncherModal open={launcherOpen} onOpenChange={setLauncherOpen} />
-    </>
+      {/* Right Side: Quick Links Dropdown, Notification Bell, and Power Button */}
+      <div className="flex items-center gap-4 sm:gap-6">
+        {/* Quick Links Menu */}
+        <div className="relative">
+          <button type="button"
+            onClick={() => setQuickLinksOpen(!quickLinksOpen)}
+            className="flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white transition"
+          >
+            <span>Quick Links</span>
+            <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+          </button>
+
+          {quickLinksOpen && (
+            <div
+              className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white py-1.5 shadow-lg dark:border-zinc-800 dark:bg-zinc-900 z-50"
+              onMouseLeave={() => setQuickLinksOpen(false)}
+            >
+              <Link
+                href="/salary"
+                onClick={() => setQuickLinksOpen(false)}
+                className="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Payslip &amp; Salary
+              </Link>
+              <Link
+                href="/leave/apply"
+                onClick={() => setQuickLinksOpen(false)}
+                className="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Apply Leave
+              </Link>
+              <Link
+                href="/attendance"
+                onClick={() => setQuickLinksOpen(false)}
+                className="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Attendance Swipes
+              </Link>
+              <Link
+                href="/documents"
+                onClick={() => setQuickLinksOpen(false)}
+                className="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Document Center
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Notifications Bell */}
+        <NotificationsBell />
+
+        {/* Power / Logout Control */}
+        <button type="button"
+          onClick={handleLogout}
+          title="Sign out"
+          className="text-slate-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition"
+        >
+          <Power className="h-4 w-4" />
+        </button>
+      </div>
+    </header>
   );
 }

@@ -1640,11 +1640,13 @@ describe("Role-Based Dashboard Authorization & Data Isolation Suite", () => {
         updatedAt: Date.now(),
       });
 
-      // Attendance record for emp1
+      // Attendance record for emp1 (in current month to avoid system date boundary failure)
+      const now = new Date();
+      const currentMonthDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-15`;
       await ctx.db.insert("attendance", {
         workspaceId: ws,
         employeeId: emp1,
-        date: "2026-10-15",
+        date: currentMonthDay,
         status: "present",
         createdAt: Date.now(),
         updatedAt: Date.now(),

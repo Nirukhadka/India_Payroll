@@ -38,7 +38,7 @@ export default function ListOfValuesPage() {
 
   let itemsData: any = undefined;
   try { itemsData = useQuery(api.systemSettings.getListOfValues, { category: selectedCategory }); } catch (e) { itemsData = undefined; }
-  const items = itemsData || [];
+  const items: any[] = itemsData || [];
   let saveLov: any = null;
   try { saveLov = useMutation(api.systemSettings.saveListOfValue); } catch (e) { saveLov = null; }
   let deleteLov: any = null;

@@ -51,7 +51,9 @@ export interface EmiCalculationResult {
  * Helper to advance a YYYY-MM string by N months
  */
 export function addMonths(startMonth: string, monthsToAdd: number): string {
-  const [yearStr, monthStr] = startMonth.split("-");
+  const parts = startMonth.split("-");
+  const yearStr = parts[0] || "2026";
+  const monthStr = parts[1] || "01";
   let year = parseInt(yearStr, 10);
   let month = parseInt(monthStr, 10) - 1; // 0-indexed
 

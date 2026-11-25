@@ -282,4 +282,95 @@ describe("files.remove (owner-or-admin, audit D-1)", () => {
         .mutation(api.files.remove, { fileId }),
     ).rejects.toThrow(/Not found/);
   });
+
+  // ── WORKSPACE-SPECIFIC SUSPENSION & LAST-ADMIN RBAC TESTS ──
+  test("requireMember strictly rejects suspended member in workspace", async () => {
+    const t = convexTest(schema, modules);
+    const { memberA, ws } = await seed(t);
+
+    // Suspend memberA in ws
+    await t.run(async (ctx) => {
+      const m = await ctx.db
+        .query("members")
+        .withIndex("by_user_workspace", (q) =>
+          q.eq("userId", memberA).eq("workspaceId", ws),
+        )
+        .unique();
+      if (m) await ctx.db.patch(m._id, { status: "suspended" });
+    });
+
+    // memberA attempting file listing or protected workspace query must throw Forbidden
+    await expect(
+      t.withIdentity(as(memberA)).query(api.files.list, { workspaceId: ws }),
+    ).rejects.toThrow(/Member is suspended in this workspace/);
+  });
+
+  test("suspending user in Workspace A does NOT affect their active access in Workspace B", async () => {
+    const t = convexTest(schema, modules);
+    const { memberA, ws: wsA } = await seed(t);
+
+    // Create Workspace B and add memberA as active
+    const wsB = await t.run(async (ctx) => {
+      const w = await ctx.db.insert("workspaces", {
+        name: "WS_B",
+        ownerId: memberA,
+        createdAt: Date.now(),
+      });
+      await ctx.db.insert("members", {
+        workspaceId: w,
+        userId: memberA,
+        role: "admin",
+        status: "active",
+        createdAt: Date.now(),
+      });
+      return w;
+    });
+
+    // Suspend memberA in wsA only
+    await t.run(async (ctx) => {
+      const mA = await ctx.db
+        .query("members")
+        .withIndex("by_user_workspace", (q) =>
+          q.eq("userId", memberA).eq("workspaceId", wsA),
+        )
+        .unique();
+      if (mA) await ctx.db.patch(mA._id, { status: "suspended" });
+    });
+
+    // Rejected in wsA
+    await expect(
+      t.withIdentity(as(memberA)).query(api.files.list, { workspaceId: wsA }),
+    ).rejects.toThrow(/Member is suspended in this workspace/);
+
+    // Allowed in wsB
+    const filesB = await t
+      .withIdentity(as(memberA))
+      .query(api.files.list, { workspaceId: wsB });
+    expect(filesB).toEqual([]);
+  });
+
+  test("legacy member rows without status field default to active", async () => {
+    const t = convexTest(schema, modules);
+    const { memberA, ws } = await seed(t);
+
+    // Ensure memberA has undefined status (legacy row)
+    await t.run(async (ctx) => {
+      const m = await ctx.db
+        .query("members")
+        .withIndex("by_user_workspace", (q) =>
+          q.eq("userId", memberA).eq("workspaceId", ws),
+        )
+        .unique();
+      if (m) {
+        const { status: _status, ...rest } = m as any;
+        await ctx.db.replace(m._id, rest);
+      }
+    });
+
+    // Access must succeed without errors
+    const files = await t
+      .withIdentity(as(memberA))
+      .query(api.files.list, { workspaceId: ws });
+    expect(files).toEqual([]);
+  });
 });

@@ -119,10 +119,10 @@ export default function ReimbursementsManagementPage() {
         workspaceId: effectiveWorkspaceId as any,
         employeeId: empId as any,
         categoryCode,
-        amount: claimAmount,
+        claimAmount,
         expenseDate,
         businessPurpose: purpose || "Business expense claim",
-        receiptUrls: receiptUrl ? [receiptUrl] : [],
+        description: purpose || "Business expense claim",
         submitNow: true,
       });
       setIsNewClaimOpen(false);
@@ -134,23 +134,26 @@ export default function ReimbursementsManagementPage() {
 
   // Execute review
   const handleExecuteReview = async () => {
-    if (!activeClaim) return;
+    if (!activeClaim || !effectiveWorkspaceId) return;
     try {
       if (reviewType === "MANAGER") {
         if (reviewAction === "APPROVE") {
           await managerReview({
+            workspaceId: effectiveWorkspaceId as any,
             claimId: activeClaim._id,
             action: "APPROVE",
             comments: reviewComments,
           });
         } else if (reviewAction === "REJECT") {
           await managerReview({
+            workspaceId: effectiveWorkspaceId as any,
             claimId: activeClaim._id,
             action: "REJECT",
             comments: reviewComments || "Manager rejection",
           });
         } else if (reviewAction === "RETURN") {
           await managerReview({
+            workspaceId: effectiveWorkspaceId as any,
             claimId: activeClaim._id,
             action: "RETURN",
             comments: reviewComments || "Please provide updated receipt",
@@ -160,22 +163,25 @@ export default function ReimbursementsManagementPage() {
         // FINANCE
         if (reviewAction === "APPROVE") {
           await financeReview({
+            workspaceId: effectiveWorkspaceId as any,
             claimId: activeClaim._id,
             action: "APPROVE",
-            approvedAmount: approvedAmount > 0 ? approvedAmount : activeClaim.claimedAmount,
+            approvedAmount: approvedAmount > 0 ? approvedAmount : activeClaim.claimAmount,
             comments: reviewComments,
           });
         } else if (reviewAction === "REJECT") {
           await financeReview({
+            workspaceId: effectiveWorkspaceId as any,
             claimId: activeClaim._id,
             action: "REJECT",
-            comments: reviewComments || "Finance policy rejection",
+            reason: reviewComments || "Finance rejection",
           });
-        } else if (reviewAction === "HOLD") {
+        } else if (reviewAction === "RETURN") {
           await financeReview({
+            workspaceId: effectiveWorkspaceId as any,
             claimId: activeClaim._id,
             action: "HOLD",
-            comments: reviewComments || "Under verification with vendor",
+            comments: reviewComments || "Holding for documentation verification",
           });
         }
       }
@@ -291,10 +297,10 @@ export default function ReimbursementsManagementPage() {
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                {metrics ? metrics.pendingReviewCount : "..."}
+                {metrics ? metrics.pendingReview : "..."}
               </span>
               <span className="text-xs text-muted-foreground font-medium">
-                ₹{(metrics ? (metrics.pendingReviewAmount / 100).toLocaleString("en-IN") : 0)}
+                ₹{(metrics ? metrics.totalPendingPayout.toLocaleString("en-IN") : 0)}
               </span>
             </div>
           </div>
@@ -308,10 +314,10 @@ export default function ReimbursementsManagementPage() {
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {metrics ? metrics.approvedCount : "..."}
+                {metrics ? metrics.approved : "..."}
               </span>
               <span className="text-xs text-muted-foreground font-medium">
-                ₹{(metrics ? (metrics.approvedAmount / 100).toLocaleString("en-IN") : 0)}
+                ₹{(metrics ? metrics.totalApprovedAmount.toLocaleString("en-IN") : 0)}
               </span>
             </div>
           </div>
@@ -325,10 +331,10 @@ export default function ReimbursementsManagementPage() {
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {metrics ? metrics.settledCount : "..."}
+                {metrics ? metrics.settled : "..."}
               </span>
               <span className="text-xs text-muted-foreground font-medium">
-                ₹{(metrics ? (metrics.settledAmount / 100).toLocaleString("en-IN") : 0)}
+                {metrics ? metrics.settled : 0} claims
               </span>
             </div>
           </div>
@@ -345,7 +351,7 @@ export default function ReimbursementsManagementPage() {
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
-              Pending Approval ({metrics?.pendingReviewCount ?? 0})
+              Pending Approval ({metrics?.pendingReview ?? 0})
             </button>
             <button
               onClick={() => setActiveTab("approved")}
@@ -355,7 +361,7 @@ export default function ReimbursementsManagementPage() {
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
-              Approved for Payroll ({metrics?.approvedCount ?? 0})
+              Approved for Payroll ({metrics?.approved ?? 0})
             </button>
             <button
               onClick={() => setActiveTab("settled")}
@@ -365,7 +371,7 @@ export default function ReimbursementsManagementPage() {
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
-              Settled ({metrics?.settledCount ?? 0})
+              Settled ({metrics?.settled ?? 0})
             </button>
             <button
               onClick={() => setActiveTab("all")}
@@ -508,7 +514,7 @@ export default function ReimbursementsManagementPage() {
                     Claim Details — {activeClaim.claimNumber}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Submitted on {new Date(activeClaim.submittedAt || activeClaim.createdAt).toLocaleString()}
+                    Submitted on {new Date((activeClaim as any).submittedAt || activeClaim.createdAt).toLocaleString()}
                   </p>
                 </div>
                 <button
@@ -530,7 +536,7 @@ export default function ReimbursementsManagementPage() {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Expense Category:</span>
-                  <div className="font-semibold text-foreground">{activeClaim.categoryName}</div>
+                  <div className="font-semibold text-foreground">{activeClaim.categoryCode}</div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Tax Treatment:</span>
@@ -538,7 +544,7 @@ export default function ReimbursementsManagementPage() {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Claimed Amount:</span>
-                  <div className="font-bold text-foreground text-sm">₹{(activeClaim.claimedAmount / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                  <div className="font-bold text-foreground text-sm">₹{(activeClaim.claimAmount / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Approved Amount:</span>
@@ -634,7 +640,7 @@ export default function ReimbursementsManagementPage() {
                       className="w-full rounded-lg border border-border bg-background p-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                     <span className="text-[11px] text-muted-foreground mt-0.5 block">
-                      Original claimed: ₹{(activeClaim.claimedAmount / 100).toFixed(2)}
+                      Original claimed: ₹{(activeClaim.claimAmount / 100).toFixed(2)}
                     </span>
                   </div>
                 )}

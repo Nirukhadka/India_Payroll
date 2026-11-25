@@ -325,5 +325,41 @@ describe("Engage Community & Recognition Suite", () => {
       .query(api.engage.listComments, { workspaceId });
     expect(comments.length).toBe(1);
     expect(comments[0].content).toBe("Great work team! Looking forward to it.");
+
+    // Member 2 edits their own comment
+    await t
+      .withIdentity(as(member2Id))
+      .mutation(api.engage.editComment, {
+        workspaceId,
+        commentId,
+        content: "Updated: Great work team! Let's achieve our targets.",
+      });
+
+    const updatedComments = await t
+      .withIdentity(as(member1Id))
+      .query(api.engage.listComments, { workspaceId });
+    expect(updatedComments[0].content).toBe("Updated: Great work team! Let's achieve our targets.");
+
+    // Member 1 (non-admin, not author) cannot edit Member 2's comment
+    await expect(
+      t.withIdentity(as(member1Id)).mutation(api.engage.editComment, {
+        workspaceId,
+        commentId,
+        content: "Hacked comment",
+      })
+    ).rejects.toThrow("Forbidden: You can only edit your own comments");
+
+    // Member 2 deletes their comment
+    await t
+      .withIdentity(as(member2Id))
+      .mutation(api.engage.deleteComment, {
+        workspaceId,
+        commentId,
+      });
+
+    const remainingComments = await t
+      .withIdentity(as(member1Id))
+      .query(api.engage.listComments, { workspaceId });
+    expect(remainingComments.length).toBe(0);
   });
 });

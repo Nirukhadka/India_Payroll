@@ -42,7 +42,8 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { GreytHRAdminDashboard } from "./_components/greyt-admin-dashboard";
 
 // ── Shared Stat Card ─────────────────────────────────────────────────────────
@@ -953,14 +954,14 @@ function MemberDashboard({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
         </div>
       </div>
 
-      {/* 3. Reference-Style Promotional Banner ("Unite by IndiaPay") */}
+      {/* 3. Reference-Style Promotional Banner */}
       <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-white px-6 py-3.5 shadow-sm sm:flex-row dark:border-border dark:bg-card">
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">
             <span className="font-semibold text-slate-800 dark:text-slate-100">
-              Unite
+              IndiaPay
             </span>{" "}
-            by IndiaPay
+            Services
           </span>
         </div>
 
@@ -1312,8 +1313,20 @@ function MemberDashboard({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
 // ── Main Dashboard Router Component ──────────────────────────────────────────
 
 export default function Home() {
+  const router = useRouter();
   const { current, workspaces, isLoading: wsLoading } = useWorkspace();
   const effectiveWorkspaceId = current ?? workspaces[0]?._id;
+  const currentWorkspace = workspaces.find(
+    (w) => w._id === effectiveWorkspaceId,
+  );
+  const role = currentWorkspace?.role;
+
+  // Immediate deterministic redirect for admin and owner roles to dedicated /admin route
+  useEffect(() => {
+    if (!wsLoading && workspaces.length > 0 && role && role !== "member") {
+      router.replace("/admin");
+    }
+  }, [wsLoading, workspaces.length, role, router]);
 
   if (wsLoading && workspaces.length === 0) {
     return (
@@ -1322,7 +1335,6 @@ export default function Home() {
       </div>
     );
   }
-  1;
 
   if (!effectiveWorkspaceId) {
     return (
@@ -1332,24 +1344,21 @@ export default function Home() {
     );
   }
 
-  const currentWorkspace = workspaces.find(
-    (w) => w._id === effectiveWorkspaceId,
-  );
-  const role = currentWorkspace?.role;
-
-  if (role === "member") {
+  // If role is admin or owner, display clean spinner while instant redirect executes
+  if (role && role !== "member") {
     return (
-      <div className="flex h-full w-full bg-[#f8fafc] px-6 py-6 dark:bg-black">
-        <div className="mx-auto w-full max-w-7xl">
-          <MemberDashboard workspaceId={effectiveWorkspaceId} />
-        </div>
+      <div className="flex h-screen w-full items-center justify-center p-12 text-primary/40">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
+  // Employee/Member renders ESS dashboard
   return (
-    <div className="w-full min-h-screen bg-white">
-      <AdminDashboard workspaceId={effectiveWorkspaceId} />
+    <div className="flex h-full w-full bg-[#f8fafc] px-6 py-6 dark:bg-black">
+      <div className="mx-auto w-full max-w-7xl">
+        <MemberDashboard workspaceId={effectiveWorkspaceId} />
+      </div>
     </div>
   );
 }

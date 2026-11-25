@@ -2,34 +2,16 @@
   "extends": "../../tooling/typescript/nextjs.json",
   "compilerOptions": {
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@v1/ui/*": [
-        "../../packages/ui/src/*"
-      ],
-      "@v1/ui": [
-        "../../packages/ui/src"
-      ],
-      "@v1/backend/*": [
-        "../../packages/backend/*"
-      ],
-      "@v1/backend": [
-        "../../packages/backend"
-      ],
-      "@v1/analytics/*": [
-        "../../packages/analytics/src/*"
-      ],
-      "@v1/analytics": [
-        "../../packages/analytics/src"
-      ]
+      "@/*": ["./src/*"],
+      "@v1/ui/*": ["../../packages/ui/src/*"],
+      "@v1/ui": ["../../packages/ui/src"],
+      "@v1/backend/*": ["../../packages/backend/*"],
+      "@v1/backend": ["../../packages/backend"],
+      "@v1/analytics/*": ["../../packages/analytics/src/*"],
+      "@v1/analytics": ["../../packages/analytics/src"]
     },
     "jsx": "preserve",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "strict": true,
     "noEmit": true,
@@ -51,7 +33,5 @@
     "tailwind.config.ts",
     "src/env.mjs"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

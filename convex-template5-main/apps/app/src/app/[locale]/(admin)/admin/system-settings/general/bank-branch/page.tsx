@@ -45,7 +45,7 @@ export default function BankBranchPage() {
 
   let branchesData: any = undefined;
   try { branchesData = useQuery(api.systemSettings.getBankBranches, selectedBank === "All Banks" ? {} : { bankName: selectedBank }); } catch (e) { branchesData = undefined; }
-  const branches = branchesData || [];
+  const branches: any[] = branchesData || [];
   let saveBranch: any = null;
   try { saveBranch = useMutation(api.systemSettings.saveBankBranch); } catch (e) { saveBranch = null; }
   let deleteBranch: any = null;

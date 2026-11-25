@@ -75,7 +75,7 @@ export default function EmployeeDirectoryPage() {
               Export
             </Link>
             <Link
-              href="/employees?action=add"
+              href="/admin/employee/admin-ops/add-employee"
               className="inline-flex items-center gap-1.5 rounded-md bg-[#0284C7] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0369A1] transition shadow-2xs"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -163,7 +163,11 @@ export default function EmployeeDirectoryPage() {
                       </div>
                     </td>
                     <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
-                      {emp.employeeIdNumber || `EMP-${emp._id.slice(-4)}`}
+                      {emp.employeeIdNumber ? (
+                        emp.employeeIdNumber
+                      ) : (
+                        <span className="italic text-slate-400">Not assigned</span>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       <p className="font-medium text-slate-800">
@@ -174,7 +178,11 @@ export default function EmployeeDirectoryPage() {
                       </p>
                     </td>
                     <td className="py-3 px-4 text-slate-600">
-                      {emp.joiningDate || "01-Apr-2024"}
+                      {emp.joiningDate ? (
+                        emp.joiningDate
+                      ) : (
+                        <span className="italic text-slate-400">Not available</span>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       <span

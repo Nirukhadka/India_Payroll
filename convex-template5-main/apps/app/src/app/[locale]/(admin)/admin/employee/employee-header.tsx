@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { AdminTopbar } from "../admin-topbar";
+import { AdminTopbar, MORE_CATEGORIES } from "../admin-topbar";
 
 export interface EmployeeHeaderProps {
   currentCategory?: "main" | "information" | "admin" | "setup" | "overview";
@@ -23,147 +23,53 @@ export function EmployeeHeader({
 }: EmployeeHeaderProps) {
   const [payrollMonth, setPayrollMonth] = useState("Nov'26");
   const [employeeFilter, setEmployeeFilter] = useState("All");
-  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
-  const [hoveredCategory, setHoveredCategory] = useState<
-    "main" | "information" | "admin" | "setup" | null
-  >(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close when clicking outside
+  // Close when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMoreDropdownOpen(false);
-        setHoveredCategory(null);
+        setActiveDropdown(null);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveDropdown(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
-
-  // 4 Top Categories & Exact Submenus matching greytHR screenshots
-  const categories = {
-    main: {
-      label: "Main",
-      items: [
-        { label: "Overview", href: "/admin/employee/main/overview" },
-        { label: "Analytics Hub", href: "/admin/employee/main/analytics" },
-        { label: "Employee Directory", href: "/admin/employee/main/directory" },
-        { label: "Organization Chart", href: "/admin/employee/main/org-chart" },
-      ],
-    },
-    information: {
-      label: "Information",
-      items: [
-        {
-          label: "Employee Profile",
-          href: "/admin/employee/information/profile",
-        },
-        {
-          label: "Bank/PF/ESI",
-          href: "/admin/employee/information/bank-pf-esi",
-        },
-        {
-          label: "Card Details",
-          href: "/admin/employee/information/card-details",
-        },
-        {
-          label: "Passport & Visa",
-          href: "/admin/employee/information/passport-visa",
-        },
-        {
-          label: "Registration Details",
-          href: "/admin/employee/information/registration",
-        },
-        {
-          label: "Position History",
-          href: "/admin/employee/information/position-history",
-        },
-        {
-          label: "Previous Employment",
-          href: "/admin/employee/information/previous-employment",
-        },
-        { label: "Separation", href: "/admin/employee/information/separation" },
-        {
-          label: "Employee Documents",
-          href: "/admin/employee/information/documents",
-        },
-      ],
-    },
-    admin: {
-      label: "Admin",
-      items: [
-        {
-          label: "Excel Import",
-          href: "/admin/employee/admin-ops/excel-import",
-        },
-        {
-          label: "Bulk Photo Upload",
-          href: "/admin/employee/admin-ops/bulk-photo-upload",
-        },
-        {
-          label: "Bulk Document Upload",
-          href: "/admin/employee/admin-ops/bulk-document-upload",
-        },
-        {
-          label: "Bulletin Board",
-          href: "/admin/employee/admin-ops/bulletin-board",
-        },
-        {
-          label: "Mass Communication",
-          href: "/admin/employee/admin-ops/mass-communication",
-        },
-        {
-          label: "Identity Verification",
-          href: "/admin/employee/admin-ops/identity-verification",
-        },
-        {
-          label: "Contract Details",
-          href: "/admin/employee/admin-ops/contract-details",
-        },
-        { label: "Data Drive", href: "/admin/employee/admin-ops/data-drive" },
-        {
-          label: "Off-boarding",
-          href: "/admin/employee/admin-ops/offboarding",
-        },
-      ],
-    },
-    setup: {
-      label: "Setup",
-      items: [
-        {
-          label: "Company Policies & Forms",
-          href: "/admin/employee/setup/company-policies",
-        },
-        { label: "Employee Segment", href: "/admin/employee/setup/segments" },
-        { label: "Employee Filter", href: "/admin/employee/setup/filters" },
-      ],
-    },
-  };
 
   return (
     <>
-      {/* ── Level 1 Header: Isolated greytHR Admin Topbar ── */}
-      <AdminTopbar activeView="welcome" />
+      {/* ── Level 1 Header: Isolated greytHR Admin Topbar with More Multi-Level Menu ── */}
+      <AdminTopbar activeView="welcome" currentModule="employee" activeCategory={currentCategory} />
 
       {/* ── Level 2 Module Header: Secondary Navigation & Module Selectors ── */}
-      <div className="border-b border-[#E2E8F0] bg-white px-4 py-2 sm:px-8 select-none z-20 relative">
+      <div className="border-b border-[#E2E8F0] bg-white px-4 py-2 sm:px-6 select-none z-30 relative">
         <div className="flex flex-wrap items-center justify-between gap-4">
           {/* Left: Breadcrumbs & Secondary Nav Tabs */}
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4">
             {/* Breadcrumb */}
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <Link
                 href="/admin"
-                className="text-[#0d6efd] hover:underline font-normal"
+                className="text-[#0284C7] hover:underline font-normal flex items-center gap-1"
               >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00A389]" />
                 Home
               </Link>
               <ChevronRight className="h-3 w-3 text-slate-400" />
               <Link
-                href="/admin/employees"
-                className="text-[#0d6efd] hover:underline font-normal"
+                href="/admin/employee/main/overview"
+                className="text-[#0284C7] hover:underline font-normal"
               >
                 Employee
               </Link>
@@ -177,80 +83,82 @@ export function EmployeeHeader({
               )}
             </div>
 
-            {/* Sub Nav Items */}
+            {/* Direct Category Dropdowns (Main, Information, Admin, Setup) */}
             <div
-              className="hidden md:flex items-center gap-1 text-xs"
+              className="hidden md:flex items-center gap-1 text-xs relative"
               ref={menuRef}
             >
               <Link
                 href="/admin/employee/main/overview"
-                className={`rounded-full px-3 py-1 font-semibold transition shadow-2xs ${
+                className={`rounded-full px-3 py-1 font-semibold transition ${
                   currentCategory === "overview"
-                    ? "bg-[#E0F2FE] text-[#0284C7]"
+                    ? "bg-[#E6FFFA] text-[#0D9488] border border-[#38B2AC]"
                     : "text-slate-600 hover:bg-slate-100"
                 }`}
               >
                 Employee
               </Link>
 
-              {/* Direct Categories */}
-              {(["main", "information", "admin", "setup"] as const).map(
-                (cat) => {
-                  const isActive = currentCategory === cat;
-                  return (
-                    <div
-                      key={cat}
-                      className="relative"
-                      onMouseEnter={() => {
-                        setHoveredCategory(cat);
-                        setMoreDropdownOpen(true);
-                      }}
+              {(["main", "information", "admin", "setup"] as const).map((cat) => {
+                const categoryDef = MORE_CATEGORIES[cat];
+                if (!categoryDef) return null;
+                const isActive = currentCategory === cat;
+                const isOpen = activeDropdown === cat;
+                return (
+                  <div
+                    key={cat}
+                    className="relative"
+                    onMouseEnter={() => setActiveDropdown(cat)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setActiveDropdown((prev) => (prev === cat ? null : cat))}
+                      className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition ${
+                        isOpen || isActive
+                          ? "font-semibold text-[#0D9488] bg-[#E6FFFA]"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      }`}
                     >
-                      <button
-                        type="button"
-                        className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-normal transition ${
-                          isActive
-                            ? "font-semibold text-[#0284C7] bg-[#E0F2FE]"
-                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      {categoryDef.label}
+                      <ChevronDown
+                        className={`h-3 w-3 transition-transform duration-150 ${
+                          isOpen ? "rotate-180 text-[#0D9488]" : "text-slate-400"
                         }`}
-                      >
-                        {categories[cat].label}
-                        <ChevronDown className="h-3 w-3 text-slate-400" />
-                      </button>
-                    </div>
-                  );
-                },
-              )}
+                      />
+                    </button>
 
-              {/* Flyout Submenu Dropdown */}
-              {moreDropdownOpen && hoveredCategory && (
-                <div
-                  className="absolute left-32 top-full mt-1 z-50 w-56 rounded-md border border-[#E2E8F0] bg-white py-1.5 shadow-lg max-h-[360px] overflow-y-auto animate-in fade-in-50 zoom-in-95 duration-100"
-                  onMouseEnter={() => setMoreDropdownOpen(true)}
-                  onMouseLeave={() => {
-                    setMoreDropdownOpen(false);
-                    setHoveredCategory(null);
-                  }}
-                >
-                  <div className="px-3 py-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    {categories[hoveredCategory].label}
+                    {/* Popover Submenu */}
+                    {isOpen && (
+                      <div
+                        className="absolute left-0 top-full mt-1.5 z-50 w-56 rounded-md border border-[#E2E8F0] bg-white py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-h-[380px] overflow-y-auto animate-in fade-in-50 zoom-in-95 duration-100"
+                        onMouseEnter={() => setActiveDropdown(cat)}
+                        onMouseLeave={() => setActiveDropdown(null)}
+                      >
+                        <div className="px-3 py-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1 mb-1">
+                          {categoryDef.label}
+                        </div>
+                        {categoryDef.items.map((sub) => (
+                          <Link
+                            key={sub.label}
+                            href={sub.href}
+                            onClick={() => setActiveDropdown(null)}
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-[#F0FDF4] hover:text-[#0D9488] transition group"
+                          >
+                            <div className="w-1 h-1 rounded-full bg-[#00A389] shrink-0 group-hover:scale-125 transition-transform" />
+                            <span className="truncate group-hover:translate-x-0.5 transition-transform">
+                              {sub.label}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {categories[hoveredCategory].items.map((sub) => (
-                    <Link
-                      key={sub.href}
-                      href={sub.href}
-                      onClick={() => setMoreDropdownOpen(false)}
-                      className="block px-3 py-1.5 text-xs text-slate-700 hover:bg-[#F0F9FF] hover:text-[#0284C7] transition"
-                    >
-                      {sub.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
+                );
+              })}
             </div>
           </div>
 
-          {/* Right: Selectors & Recents */}
+          {/* Right: Selectors & History */}
           <div className="flex items-center gap-3 text-xs">
             {/* Payroll Month Picker */}
             <div className="flex items-center gap-1.5 rounded border border-[#CBD5E1] bg-white px-2.5 py-1 text-slate-700 shadow-2xs">
@@ -271,7 +179,7 @@ export function EmployeeHeader({
               <ChevronDown className="h-3 w-3 text-slate-400 ml-1" />
             </div>
 
-            {/* History icon */}
+            {/* History Clock */}
             <button
               title="Recent History"
               type="button"

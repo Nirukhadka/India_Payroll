@@ -1,0 +1,136 @@
+================================================================================
+INDIAPAY SYSTEM DEVELOPMENT & AUDIT — MIDDAY PROGRESS REPORT
+================================================================================
+Date: November 24, 2026
+Timestamp: 16:00 IST
+Environment: Next.js App Router (localhost:3000) | Convex Backend (dev:basic-bobcat-92)
+Auditor / Assistant: Antigravity (Google DeepMind)
+================================================================================
+
+1. EXECUTIVE SUMMARY
+--------------------------------------------------------------------------------
+All assigned morning and midday sprints have been completed, audited against the
+authorized greytHR reference via REA browser sessions, and verified with 100%
+passing automated and manual test suites. Zero regressions were detected in core
+authentication, workspace RBAC, or payroll calculation pipelines.
+
+Current System Health: STABLE & GREEN
+- Authentication & Login Separation: VERIFIED & ENFORCED
+- Data Integrity & Persistence: VERIFIED & ENFORCED
+- Multi-tenant Workspace Isolation: VERIFIED & ENFORCED
+
+
+2. COMPLETED SPRINTS & MILESTONES (CHRONOLOGICAL)
+--------------------------------------------------------------------------------
+
+A. AUTHENTICATION & LOGIN SEPARATION ENFORCEMENT
+   - Strict separation maintained:
+     * Admin login -> redirects to /admin
+     * Employee login -> redirects to /
+     * Employee direct navigation to /admin -> blocked server-side & redirected
+     * Logout completely invalidates sessions and clears auth cookies
+   - Layout-level server and client guards verified.
+
+B. ADMIN WELCOME HEADER VISUAL PARITY
+   - greytHR Welcome reference alignment:
+     * Removed extraneous "Employee" and "More" buttons from /admin Welcome header.
+     * Preserved required controls on internal sub-pages.
+     * Retained 9-dot launcher for Admin dashboard.
+   - Dynamic greeting tested and verified across IST time brackets:
+     * Evaluated live at 15:10 IST ("Good Afternoon" with matching illustration).
+     * Welcome/Dashboard switcher tab verified with state preservation.
+
+C. ESS APPLICATION LAUNCHER (NINE-DOT MENU) REMOVAL
+   - Completely stripped the nine-dot application launcher and "Your Apps"
+     dropdown from Employee Self-Service (ESS) header.
+   - Preserved full launcher functionality exclusively for Admin users.
+   - Obsolete /admin/unite route verified as returning standard 404.
+
+D. ADD EMPLOYEE CRITICAL DATA INTEGRITY REMEDIATION
+   - Defect 1: Employee Number Persistence -> Added employeeIdNumber to
+     api.employees.add/update; formData.employeeNo is persisted accurately.
+   - Defect 2: Joining Date Persistence -> Added joiningDate to mutation;
+     actual selected date is persisted without hardcoded fallbacks.
+   - Defect 3: Duplicate Employee Number Protection -> Enforced compound index
+     by_workspace_employee_id to reject duplicate IDs within the same workspace.
+   - Defect 4: Removal of Fake Directory Fallbacks -> Eliminated EMP-${slice}
+     and 01-Apr-2024 placeholders; missing fields render "Not assigned" /
+     "Not available".
+   - Automated tests: 23/23 PASSED. Live browser test created employee EMP905.
+
+E. MASTER DATA INDEPENDENCE & GREYTHR COMPLIANCE AUDIT
+   - Full code inspection across 6 domains (apps/app and packages/backend).
+   - Zero production greytHR credentials or customer data present in repository.
+   - Documented clean architectural boundaries and multi-tenant isolation.
+
+F. REPORTS MODULE — SPRINT 1 FINAL SIGN-OFF
+   - Completed secondary navigation, category cards, and state filter dropdowns.
+   - Verified live search (title, description, category).
+   - Persistent All Reports / Favorites toggle with user- and workspace-scoped
+     Convex persistence (api.reports.toggleFavorite).
+   - Help banner expand/collapse persistence verified.
+   - Automated tests (reportsSprint1.test.ts): 4/4 PASSED.
+   - Signed off for Sprint 1.
+
+G. ESS SPRINT 1: LEAVE APPLY UI & FUNCTIONAL PARITY (LATEST)
+   - Route: http://localhost:3000/leave/apply
+   - Parity implemented against greytHR ESS reference:
+     * Preserved Apply, Pending, and History segmented pill tabs.
+     * 4 sub-menus: Leave, Restricted Holiday, Leave Cancel, Comp Off Grant.
+     * Permitted leave types: Sick Leave, Loss of Pay (Unpaid), Restricted
+       Holiday (RH), and Compensatory Off. Casual/Earned blocked per policy.
+     * Half-day support: Session 1 and Session 2 selectors; automatically
+       calculates and displays 0.5 Day(s) under "Applying For".
+     * Live balance indicator updated dynamically with authenticated user data.
+     * Reporting manager and active workspace employee approver dropdown.
+     * CC tag chip list + emergency contact details + 5MB attachment upload.
+     * Backend validation in submitMyLeave: Sick Leave balance checking,
+       Restricted Holiday annual quota (max 2 days/year), and overlap detection.
+     * Overlap engine allows opposite half-days (Session 1 vs 2) on the same
+       date while rejecting duplicate sessions or full-day conflicts.
+   - Browser E2E verification:
+     * Logged in as user@indiapaypayroll.com.
+     * Submitted 0.5-day Sick Leave for 2026-11-26 (Session 1).
+     * Confirmed success toast: "Leave request submitted successfully for approval."
+     * Confirmed presence under "Pending (1)" tab with active "Cancel" button.
+     * Confirmed past records under "History" tab.
+   - Overlap logic unit test matrix: 6/6 test cases PASSED.
+
+
+3. ARTIFACTS AND EVIDENCE GENERATED
+--------------------------------------------------------------------------------
+All markdown reports, logs, and screenshots are stored in the local artifacts
+repository at C:\Users\nirma\.gemini\antigravity\brain\dfff8ff6-9284-4952-899a-e09c886e427e\:
+
+Reports:
+1. LEAVE_APPLY_SPRINT_1_REPORT.md (ESS Leave Apply Parity & E2E Verification)
+2. REPORTS_SPRINT_1_FINAL_SIGNOFF_REPORT.md (Reports Gallery Module Sign-off)
+3. MASTER_DATA_INDEPENDENCE_COMPLIANCE_AUDIT_REPORT.md (Compliance Audit)
+4. ADMIN_WELCOME_VISUAL_PARITY_AUDIT_REPORT.md (Welcome Header & Clock Parity)
+5. ADD_EMPLOYEE_REMEDIATION_REPORT.md (Employee Number & Joining Date Fixes)
+6. UNITE_REMOVAL_AND_LAUNCHER_REGRESSION_REPORT.md (Launcher & Unite Regression)
+7. INDIAPAY_SECURITY_AUDIT_REPORT.md (Auth & Workspace RBAC Security Audit)
+
+Latest Browser Evidence Screenshots:
+- Leave Apply Pending State: browser_evidence/.../final_step_28.png
+- Reports Gallery Sprint 1: browser_evidence/.../final_step_57.png
+- Welcome Header Parity: browser_evidence/.../final_step_61.png
+- Add Employee Table Persistence: browser_evidence/.../final_step_30.png
+
+
+4. CURRENT ACTIVE PROCESSES
+--------------------------------------------------------------------------------
+- Next.js Dev Server: RUNNING on http://localhost:3000 (PID active, task-18246)
+- Convex Backend Deployment: dev:basic-bobcat-92 (Ready and synchronized)
+
+
+5. NEXT RECOMMENDED ACTIONS (AFTERNOON SPRINT)
+--------------------------------------------------------------------------------
+1. ESS Sprint 2: Attendance & Regularization Workflow (Check-in / Check-out parity).
+2. Admin Leave Management: Leave approvals, rejected request handling, and
+   manager audit view (/admin/leave/approvals).
+3. Payslip & Salary Statement employee viewing component verification.
+
+================================================================================
+END OF REPORT — STATUS: ALL SYSTEMS OPERATIONAL AND PASSING
+================================================================================

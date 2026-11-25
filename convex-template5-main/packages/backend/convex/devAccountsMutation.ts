@@ -271,6 +271,17 @@ export const provisionDevAccountsMutation = internalMutation({
     }
 
     // Member: role="member"
+    // Also remove any rogue admin/owner memberships in other workspaces for DEV_USER_EMAIL
+    const allUserMemberships = await ctx.db
+      .query("members")
+      .withIndex("by_user", (q) => q.eq("userId", userUserId))
+      .collect();
+    for (const m of allUserMemberships) {
+      if (m.workspaceId !== workspaceId) {
+        await ctx.db.delete(m._id);
+      }
+    }
+
     const userMembership = await ctx.db
       .query("members")
       .withIndex("by_user_workspace", (q) =>

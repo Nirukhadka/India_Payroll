@@ -222,17 +222,20 @@ export const requestAppAccess = mutation({
       createdAt: now,
     });
 
-    await audit(ctx, {
-      workspaceId: args.workspaceId,
-      actorId: userId,
-      action: "marketplace.request_access",
-      targetId: orgAppId,
-      details: {
-        appId: args.appId,
-        appName: appMeta.name,
-        reason: args.requestReason,
+    await audit(
+      ctx,
+      args.workspaceId,
+      userId,
+      "marketplace.request_access",
+      {
+        targetId: orgAppId,
+        details: {
+          appId: args.appId,
+          appName: appMeta.name,
+          reason: args.requestReason,
+        },
       },
-    });
+    );
 
     return { success: true, orgAppId };
   },
@@ -293,13 +296,13 @@ export const reviewAppRequest = mutation({
       createdAt: now,
     });
 
-    await audit(ctx, {
-      workspaceId: args.workspaceId,
-      actorId: userId,
-      action: `marketplace.${newStatus}`,
-      targetId: existing._id,
-      details: { appId: args.appId, comments: args.reviewComments },
-    });
+    await audit(
+      ctx,
+      args.workspaceId,
+      userId,
+      `marketplace.${newStatus}`,
+      { targetId: existing._id, appId: args.appId, comments: args.reviewComments },
+    );
 
     return { success: true, status: newStatus };
   },
@@ -521,17 +524,18 @@ export const submitDemoRequest = mutation({
       createdAt: Date.now(),
     });
 
-    await audit(ctx, {
-      workspaceId: args.workspaceId,
-      actorId: userId,
-      action: "marketplace.book_demo",
-      targetId: id,
-      details: {
+    await audit(
+      ctx,
+      args.workspaceId,
+      userId,
+      "marketplace.book_demo",
+      {
+        targetId: id,
         name: args.name,
         appId: args.interestedAppId,
         date: args.preferredDate,
       },
-    });
+    );
 
     return { success: true, requestId: id };
   },

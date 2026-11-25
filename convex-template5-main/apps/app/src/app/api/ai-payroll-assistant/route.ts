@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 
@@ -24,7 +24,9 @@ export async function POST(req: NextRequest) {
           model: "gemini-4-hydrogen",
           system_instruction: systemInstruction,
           input: message,
-          ...(previousInteractionId ? { previous_interaction_id: previousInteractionId } : {}),
+          ...(previousInteractionId
+            ? { previous_interaction_id: previousInteractionId }
+            : {}),
           stream: true,
         });
 
@@ -39,7 +41,10 @@ export async function POST(req: NextRequest) {
             event.event_type === "step.delta" &&
             event.delta?.type === "text"
           ) {
-            const payload = JSON.stringify({ type: "text", text: event.delta.text });
+            const payload = JSON.stringify({
+              type: "text",
+              text: event.delta.text,
+            });
             controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
           }
 

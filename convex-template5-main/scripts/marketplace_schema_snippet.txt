@@ -1,0 +1,121 @@
+﻿    // -------------------------------------------------------------------------
+    // Unite Marketplace Module (Phase 15)
+    // -------------------------------------------------------------------------
+
+    // Marketplace Applications Registry
+    marketplaceApps: defineTable({
+      appId: v.string(), // e.g. "springverify", "fatakpay", "cleartax"
+      name: v.string(),
+      provider: v.string(),
+      tagline: v.string(),
+      description: v.string(),
+      category: v.string(), // "Background Verification", "Advance Salary", etc.
+      secondaryCategory: v.optional(v.string()),
+      rating: v.number(),
+      ratingCount: v.number(),
+      offerBadge: v.optional(v.string()), // e.g. "20% Discount on Background Checks"
+      isFeatured: v.boolean(),
+      isInterestedDefault: v.optional(v.boolean()),
+      integrationType: v.union(v.literal("native"), v.literal("connector"), v.literal("third_party"), v.literal("demo")),
+      supportedFeatures: v.array(v.string()),
+      pricingModel: v.string(), // e.g. "Paid per check", "Enterprise subscription", "Free trial available"
+      dataExchanged: v.array(v.string()),
+      securityCompliance: v.array(v.string()), // e.g. ["ISO 27001", "SOC 2 Type II", "GDPR"]
+      docUrl: v.optional(v.string()),
+      isActiveInCatalog: v.boolean(),
+      createdAt: v.number(),
+    })
+      .index("by_app_id", ["appId"])
+      .index("by_category", ["category"])
+      .index("by_featured", ["isFeatured"]),
+
+    // Organization App Installation / Request Status
+    marketplaceOrgApps: defineTable({
+      workspaceId: v.id("workspaces"),
+      appId: v.string(),
+      status: v.union(
+        v.literal("available"),
+        v.literal("requested"),
+        v.literal("pending_approval"),
+        v.literal("approved"),
+        v.literal("installed"),
+        v.literal("active"),
+        v.literal("suspended"),
+        v.literal("rejected")
+      ),
+      requestedBy: v.optional(v.id("users")),
+      requestReason: v.optional(v.string()),
+      requestedModules: v.optional(v.array(v.string())),
+      contactName: v.optional(v.string()),
+      contactEmail: v.optional(v.string()),
+      contactPhone: v.optional(v.string()),
+      reviewedBy: v.optional(v.id("users")),
+      reviewComments: v.optional(v.string()),
+      configSettings: v.optional(v.string()), // JSON configuration (non-sensitive)
+      requestedAt: v.optional(v.number()),
+      reviewedAt: v.optional(v.number()),
+      installedAt: v.optional(v.number()),
+      updatedAt: v.number(),
+    })
+      .index("by_workspace", ["workspaceId"])
+      .index("by_workspace_app", ["workspaceId", "appId"])
+      .index("by_workspace_status", ["workspaceId", "status"]),
+
+    // User / Org Interested Apps (Bookmarked / Saved for later)
+    marketplaceInterestedApps: defineTable({
+      workspaceId: v.id("workspaces"),
+      userId: v.id("users"),
+      appId: v.string(),
+      addedAt: v.number(),
+    })
+      .index("by_workspace_user", ["workspaceId", "userId"])
+      .index("by_workspace_app", ["workspaceId", "appId"]),
+
+    // Marketplace In-App Notifications
+    marketplaceNotifications: defineTable({
+      workspaceId: v.id("workspaces"),
+      recipientUserId: v.optional(v.id("users")), // undefined = all admins in org
+      appId: v.string(),
+      appName: v.string(),
+      title: v.string(),
+      message: v.string(),
+      type: v.union(
+        v.literal("request_submitted"),
+        v.literal("request_approved"),
+        v.literal("request_rejected"),
+        v.literal("installation_completed"),
+        v.literal("config_required"),
+        v.literal("status_changed")
+      ),
+      isRead: v.boolean(),
+      createdAt: v.number(),
+    })
+      .index("by_workspace", ["workspaceId"])
+      .index("by_workspace_read", ["workspaceId", "isRead"])
+      .index("by_workspace_recipient", ["workspaceId", "recipientUserId"]),
+
+    // Marketplace Demo Requests (Book A Demo)
+    marketplaceDemoRequests: defineTable({
+      workspaceId: v.id("workspaces"),
+      userId: v.id("users"),
+      name: v.string(),
+      organization: v.string(),
+      workEmail: v.string(),
+      contactNumber: v.string(),
+      interestedAppId: v.string(),
+      preferredDate: v.string(),
+      additionalInfo: v.optional(v.string()),
+      status: v.union(v.literal("received"), v.literal("contacted"), v.literal("scheduled")),
+      createdAt: v.number(),
+    })
+      .index("by_workspace", ["workspaceId"])
+      .index("by_workspace_user", ["workspaceId", "userId"]),
+
+    // User Tour Preference (Take A Tour completion)
+    marketplaceTourPreferences: defineTable({
+      workspaceId: v.id("workspaces"),
+      userId: v.id("users"),
+      hasCompletedTour: v.boolean(),
+      completedAt: v.optional(v.number()),
+    })
+      .index("by_workspace_user", ["workspaceId", "userId"]),

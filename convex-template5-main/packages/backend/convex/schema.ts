@@ -86,8 +86,44 @@ export default defineSchema({
     storageId: v.id("_storage"),
     size: v.number(),
     contentType: v.string(),
+    category: v.optional(
+      v.union(
+        v.literal("documents"),
+        v.literal("payslips"),
+        v.literal("form16"),
+        v.literal("policies"),
+        v.literal("forms"),
+      ),
+    ),
+    // E-Sign and Digital Signature Workflow Metadata
+    eSignStatus: v.optional(
+      v.union(
+        v.literal("none"),
+        v.literal("pending_signature"),
+        v.literal("signed"),
+        v.literal("declined"),
+      ),
+    ),
+    signerUserId: v.optional(v.id("users")),
+    signerName: v.optional(v.string()),
+    signedAt: v.optional(v.number()),
+    signatureMethod: v.optional(v.string()), // e.g. "INTERNAL_DIGITAL_OTP", "CLICK_WRAP_AUDIT"
+    signatureAuditHash: v.optional(v.string()),
+    auditTrail: v.optional(
+      v.array(
+        v.object({
+          action: v.string(),
+          actorId: v.id("users"),
+          actorName: v.string(),
+          timestamp: v.number(),
+          ipAddress: v.optional(v.string()),
+          notes: v.optional(v.string()),
+        }),
+      ),
+    ),
     createdAt: v.number(),
-  }).index("by_workspace", ["workspaceId"]),
+  }).index("by_workspace", ["workspaceId"])
+    .index("by_workspace_esign", ["workspaceId", "eSignStatus"]),
 
   workspaces: defineTable({
     name: v.string(),
@@ -98,6 +134,13 @@ export default defineSchema({
     workspaceId: v.id("workspaces"),
     userId: v.id("users"),
     role: v.string(),
+    status: v.optional(
+      v.union(
+        v.literal("active"),
+        v.literal("suspended"),
+        v.literal("invited"),
+      ),
+    ),
     createdAt: v.number(),
   })
     .index("by_user", ["userId"])
@@ -164,7 +207,8 @@ export default defineSchema({
     .index("by_workspace", ["workspaceId"])
     .index("by_workspace_status", ["workspaceId", "status"])
     .index("by_workspace_user", ["workspaceId", "userId"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_workspace_employee_id", ["workspaceId", "employeeIdNumber"]),
 
   salaries: defineTable({
     workspaceId: v.id("workspaces"),
@@ -190,9 +234,29 @@ export default defineSchema({
       v.literal("half_day"),
       v.literal("paid_leave"),
       v.literal("unpaid_leave"),
+      v.literal("holiday"),
+      v.literal("weekly_off"),
     ),
     checkInTime: v.optional(v.string()), // "HH:MM"
     checkOutTime: v.optional(v.string()), // "HH:MM"
+    workDurationHours: v.optional(v.number()), // Net work duration in hours
+    actualBreakMinutes: v.optional(v.number()), // Measured duration of breaks
+    deductedBreakMinutes: v.optional(v.number()), // Break duration deducted after precedence check
+    lateInMinutes: v.optional(v.number()), // Minutes late past shift start + grace
+    earlyOutMinutes: v.optional(v.number()), // Minutes early before shift end
+    shiftId: v.optional(v.id("shifts")),
+    source: v.optional(
+      v.union(v.literal("biometric"), v.literal("manual"), v.literal("regularized")),
+    ),
+    completionStatus: v.optional(
+      v.union(
+        v.literal("complete"),
+        v.literal("missing_out"),
+        v.literal("missing_in"),
+        v.literal("single_punch"),
+      ),
+    ),
+    timezone: v.optional(v.string()), // e.g. "Asia/Kolkata"
     remarks: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -200,7 +264,8 @@ export default defineSchema({
     .index("by_workspace", ["workspaceId"])
     .index("by_workspace_date", ["workspaceId", "date"])
     .index("by_employee", ["employeeId"])
-    .index("by_employee_date", ["employeeId", "date"]),
+    .index("by_employee_date", ["employeeId", "date"])
+    .index("by_workspace_employee_date", ["workspaceId", "employeeId", "date"]),
 
   leaveRequests: defineTable({
     workspaceId: v.id("workspaces"),
@@ -364,6 +429,28 @@ export default defineSchema({
       )
     ),
     totalReimbursements: v.optional(v.number()),
+    paymentMode: v.optional(
+      v.union(v.literal("bank_transfer"), v.literal("cash"), v.literal("cheque"))
+    ),
+    paymentStatus: v.optional(
+      v.union(
+        v.literal("PENDING"),
+        v.literal("AUTHORIZED"),
+        v.literal("PROCESSING"),
+        v.literal("PAID"),
+        v.literal("FAILED"),
+        v.literal("PARTIALLY_PAID")
+      )
+    ),
+    paymentReference: v.optional(v.string()),
+    amountPaid: v.optional(v.number()),
+    remainingBalance: v.optional(v.number()),
+    settlementEvidenceReference: v.optional(v.string()),
+    settlementVerifiedAt: v.optional(v.number()),
+    settlementVerifiedById: v.optional(v.id("users")),
+    paidAt: v.optional(v.number()),
+    isHold: v.optional(v.boolean()),
+    isStopProcessing: v.optional(v.boolean()),
     createdAt: v.number(),
   })
     .index("by_workspace", ["workspaceId"])
@@ -611,6 +698,8 @@ export default defineSchema({
       v.literal("half_day"),
       v.literal("paid_leave"),
       v.literal("unpaid_leave"),
+      v.literal("holiday"),
+      v.literal("weekly_off"),
     ),
     checkInTime: v.optional(v.string()), // "HH:MM"
     checkOutTime: v.optional(v.string()), // "HH:MM"
@@ -631,6 +720,117 @@ export default defineSchema({
     .index("by_workspace_status", ["workspaceId", "status"])
     .index("by_employee", ["employeeId"])
     .index("by_employee_date", ["employeeId", "date"]),
+
+  // -------------------------------------------------------------------------
+  // Biometric Attendance & Shift Parity Modules (Phase 2)
+  // -------------------------------------------------------------------------
+
+  // 1. Biometric Hardware Devices
+  biometricDevices: defineTable({
+    workspaceId: v.id("workspaces"),
+    name: v.string(), // e.g. "Main Gate Terminal"
+    deviceSerial: v.string(), // Hardware serial number
+    deviceModel: v.optional(v.string()), // e.g. "eSSL K90 Pro"
+    ipAddress: v.optional(v.string()),
+    keyFingerprint: v.string(), // SHA-256 preview for UI identification
+    secretCiphertext: v.string(), // Encrypted communication secret
+    secretIv: v.string(), // Initialization vector for AES-GCM
+    keyVersion: v.number(), // Monotonically increasing version
+    status: v.union(v.literal("active"), v.literal("inactive"), v.literal("deactivated")),
+    lastHeartbeatAt: v.optional(v.number()),
+    lastSyncAt: v.optional(v.number()),
+    createdById: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_status", ["workspaceId", "status"])
+    .index("by_workspace_serial", ["workspaceId", "deviceSerial"]),
+
+  // 2. Raw Biometric Punch Logs
+  rawPunchLogs: defineTable({
+    workspaceId: v.id("workspaces"),
+    deviceId: v.optional(v.id("biometricDevices")),
+    deviceSerial: v.string(),
+    biometricUserId: v.string(), // Badge or device user ID
+    employeeId: v.optional(v.id("employees")), // Resolved employee reference
+    punchTimestamp: v.number(), // Epoch ms
+    punchType: v.union(
+      v.literal("check_in"),
+      v.literal("check_out"),
+      v.literal("break_out"),
+      v.literal("break_in"),
+      v.literal("auto"),
+    ),
+    punchDate: v.string(), // "YYYY-MM-DD"
+    idempotencyKey: v.string(), // SHA256(workspaceId:deviceSerial:biometricUserId:punchTimestamp)
+    processedStatus: v.union(
+      v.literal("pending"),
+      v.literal("processed"),
+      v.literal("unmapped"),
+      v.literal("ignored"),
+      v.literal("duplicate"),
+    ),
+    processedAt: v.optional(v.number()),
+    processingNotes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_idempotency", ["idempotencyKey"])
+    .index("by_workspace_date", ["workspaceId", "punchDate"])
+    .index("by_workspace_employee_date", ["workspaceId", "employeeId", "punchDate"])
+    .index("by_device_timestamp", ["deviceSerial", "punchTimestamp"]),
+
+  // 3. Shift Master
+  shifts: defineTable({
+    workspaceId: v.id("workspaces"),
+    name: v.string(), // "General Shift", "Night Shift"
+    code: v.string(), // "GEN", "NIGHT"
+    startTime: v.string(), // "HH:MM", e.g. "09:00"
+    endTime: v.string(), // "HH:MM", e.g. "18:00"
+    isOvernight: v.boolean(),
+    gracePeriodMinutes: v.number(), // Allowed late arrival without penalty
+    halfDayThresholdHours: v.number(), // Minimum hours for half day
+    fullDayThresholdHours: v.number(), // Minimum hours for full day
+    breakDeductionRule: v.union(
+      v.literal("measured_breaks"),
+      v.literal("fixed_break"),
+      v.literal("whichever_is_greater"),
+    ),
+    fixedBreakMinutes: v.number(), // e.g. 60
+    isDefault: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_code", ["workspaceId", "code"]),
+
+  // 5. Biometric Replay Protection Nonces
+  biometricNonces: defineTable({
+    workspaceId: v.id('workspaces'),
+    deviceSerial: v.string(),
+    nonce: v.string(),
+    timestamp: v.number(),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index('by_device_nonce', ['workspaceId', 'deviceSerial', 'nonce'])
+    .index('by_expires', ['expiresAt']),
+
+  // 4. Employee Shift Assignments
+  shiftAssignments: defineTable({
+    workspaceId: v.id("workspaces"),
+    employeeId: v.id("employees"),
+    shiftId: v.id("shifts"),
+    effectiveFrom: v.string(), // "YYYY-MM-DD"
+    effectiveTo: v.optional(v.string()), // "YYYY-MM-DD"
+    createdById: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_employee", ["workspaceId", "employeeId"])
+    .index("by_employee_effective", ["employeeId", "effectiveFrom"]),
 
   // Workflow Delegation Settings
   workflowDelegates: defineTable({
@@ -1330,6 +1530,38 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_workspace", ["workspaceId"]),
 
+  payrollControls: defineTable({
+    workspaceId: v.id("workspaces"),
+    periodMonth: v.string(), // "YYYY-MM"
+    payrollInputsLocked: v.boolean(),
+    employeeViewReleased: v.boolean(),
+    itStatementReleased: v.boolean(),
+    payrollLocked: v.boolean(),
+    lockedById: v.optional(v.id("users")),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_period", ["workspaceId", "periodMonth"]),
+
+  payrollSettlementAuditLogs: defineTable({
+    workspaceId: v.id("workspaces"),
+    payrollRunId: v.id("payrollRuns"),
+    payrollItemId: v.id("payrollItems"),
+    employeeId: v.id("employees"),
+    action: v.string(), // "STATUS_CHANGE" | "PAYMENT_RECORDED" | "DUPLICATE_ATTEMPT_BLOCKED"
+    previousStatus: v.optional(v.string()),
+    newStatus: v.string(),
+    amount: v.number(),
+    remainingBalance: v.number(),
+    paymentMode: v.string(),
+    evidenceReference: v.string(),
+    performedById: v.id("users"),
+    timestamp: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_item", ["payrollItemId"])
+    .index("by_run", ["payrollRunId"]),
+
   systemPayrollPreferences: defineTable({
     workspaceId: v.id("workspaces"),
     payPeriodCycle: v.string(), // "1-to-last" or "26-to-25"
@@ -1480,6 +1712,57 @@ export default defineSchema({
   })
     .index("by_workspace", ["workspaceId"])
     .index("by_workspace_screenKey", ["workspaceId", "screenKey"]),
+
+  systemEmployeePositions: defineTable({
+    workspaceId: v.id("workspaces"),
+    code: v.string(),
+    title: v.string(),
+    department: v.string(),
+    level: v.string(),
+    isCritical: v.optional(v.boolean()),
+    isActive: v.optional(v.boolean()),
+    status: v.optional(v.string()),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id("users")),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_code", ["workspaceId", "code"]),
+
+  systemLeavingReasons: defineTable({
+    workspaceId: v.id("workspaces"),
+    code: v.string(),
+    description: v.string(),
+    pfCode: v.string(),
+    isActive: v.boolean(),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id("users")),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_code", ["workspaceId", "code"]),
+
+  systemAssetGroupSettings: defineTable({
+    workspaceId: v.id("workspaces"),
+    groupCode: v.string(),
+    groupName: v.string(),
+    returnable: v.boolean(),
+    depreciationPct: v.number(),
+    approvalRequired: v.boolean(),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id("users")),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_groupCode", ["workspaceId", "groupCode"]),
+
+  systemEmployeeDirectoryConfig: defineTable({
+    workspaceId: v.id("workspaces"),
+    config: v.optional(v.any()),
+    visibleFields: v.optional(v.array(v.string())),
+    searchableFields: v.optional(v.array(v.string())),
+    allowExport: v.optional(v.boolean()),
+    restrictInactiveProfiles: v.optional(v.boolean()),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id("users")),
+  }).index("by_workspace", ["workspaceId"]),
 
 
   // ─────────────────────────────────────────────────────────────────────────────
